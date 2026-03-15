@@ -859,6 +859,287 @@
 
   /* scrollbar */
   ::-webkit-scrollbar { display: none; }
+
+  /* ── RESPONSIVE ── */
+
+  /* Laptops grandes (≤1280px) */
+  @media (max-width: 1280px) {
+    .slide { padding: 64px 72px 52px; }
+    .orbit { width: 300px; height: 300px; }
+    .orbit-inner { width: 200px; height: 200px; }
+    .orbit-core { width: 110px; height: 110px; font-size: 32px; }
+  }
+
+  /* Notebooks / MacBooks (≤1024px) */
+  @media (max-width: 1024px) {
+    .slide { padding: 52px 48px 44px; }
+    h1.hero-title { font-size: clamp(32px, 5.5vw, 60px); }
+    h2.slide-title { font-size: clamp(24px, 4vw, 44px); }
+    h3.section-title { font-size: clamp(17px, 2.2vw, 26px); }
+    .subtitle { font-size: clamp(14px, 1.8vw, 19px); }
+    .cover-title { font-size: clamp(36px, 6vw, 68px); }
+
+    .orbit { width: 240px; height: 240px; }
+    .orbit-inner { width: 165px; height: 165px; }
+    .orbit-core { width: 90px; height: 90px; font-size: 26px; }
+
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
+    .cards-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+    .timeline-h { overflow-x: auto; padding-bottom: 6px; }
+    .tl-step { min-width: 88px; }
+    .tl-label { font-size: 12px; }
+    .tl-sub { font-size: 11px; }
+    .tl-dot { width: 38px; height: 38px; font-size: 15px; }
+
+    .roadmap-item > div:first-child { min-width: 150px; }
+
+    .stat-box .stat-num { font-size: clamp(26px, 3.4vw, 40px); }
+    .highlight-box .big-num { font-size: clamp(38px, 6vw, 64px); }
+
+    .proj-col .proj-revenue { font-size: clamp(22px, 2.8vw, 34px); }
+    .proj-bar-container { height: 90px; }
+  }
+
+  /* Tablets / telas médias (≤768px) */
+  @media (max-width: 768px) {
+    .slide { padding: 54px 28px 50px; }
+
+    .logo-fixed { top: 16px; left: 18px; height: 28px; }
+    .slide-counter { bottom: 12px; right: 16px; font-size: 12px; }
+
+    /* Ocultar órbita no cover */
+    .orbit { display: none !important; }
+
+    /* Cover slide: empilhar verticalmente */
+    .cover-flex {
+      flex-direction: column !important;
+      gap: 20px !important;
+      justify-content: flex-start !important;
+    }
+    .cover-content { max-width: 100%; }
+    .cover-title { font-size: clamp(30px, 7vw, 52px); }
+    .cover-subtitle { font-size: 15px; margin-bottom: 20px; }
+
+    /* Grids: colapsar para 1 coluna */
+    .two-col,
+    .two-col-3,
+    .roi-grid,
+    .check-grid { grid-template-columns: 1fr !important; }
+
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
+    .price-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+    /* Timeline horizontal: habilitar scroll */
+    .timeline-h { overflow-x: auto; padding-bottom: 8px; }
+    .tl-step { min-width: 74px; padding: 0 4px; }
+    .tl-label { font-size: 11px; }
+    .tl-sub { font-size: 10px; }
+    .tl-dot { width: 34px; height: 34px; font-size: 13px; }
+    .tl-time { font-size: 10px; padding: 2px 6px; }
+
+    /* OS flow */
+    .os-flow { flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .os-arrow { display: none; }
+
+    /* Stats */
+    .stats-row { gap: 10px; }
+    .stat-box { padding: 16px 12px; min-width: 120px; }
+    .stat-box .stat-num { font-size: clamp(24px, 5vw, 38px); }
+
+    /* Cards */
+    .card { padding: 18px; }
+    .highlight-box { padding: 22px 24px; }
+    .highlight-box .big-num { font-size: clamp(36px, 7vw, 56px); }
+    .highlight-box .big-label { font-size: 17px; }
+    .highlight-box p { font-size: 14px; }
+
+    /* Pillars */
+    .pillars { gap: 10px; }
+    .pillar { min-width: 130px; max-width: 200px; padding: 16px 12px; }
+    .pillar .pillar-icon { font-size: 26px; }
+    .pillar .pillar-title { font-size: 15px; }
+    .pillar .pillar-desc { font-size: 13px; }
+
+    /* Roadmap */
+    .roadmap-item { flex-wrap: wrap; gap: 8px; }
+    .roadmap-item > div:first-child { min-width: unset !important; width: 100%; }
+
+    /* Projeção */
+    .proj-row { flex-wrap: wrap; gap: 10px; }
+    .proj-col { min-width: 140px; }
+    .proj-bar-container { height: 70px; }
+
+    /* Marketplace */
+    .marketplace-card { min-width: 140px; padding: 18px 14px; }
+
+    /* Dash */
+    .dash-body { grid-template-columns: 1fr 1fr; }
+    .dash-chart { grid-column: span 2; }
+
+    /* Problem list */
+    .problem-list li .text strong { font-size: 16px; }
+    .problem-list li .text span { font-size: 14px; }
+
+    /* Check items */
+    .check-item strong { font-size: 15px; }
+    .check-item span { font-size: 13px; }
+  }
+
+  /* Celulares (≤480px) */
+  @media (max-width: 480px) {
+    .slide { padding: 52px 16px 50px; overflow-y: auto; }
+    .slide-content { padding-bottom: 4px; }
+
+    h1.hero-title { font-size: clamp(26px, 8vw, 44px); letter-spacing: -1px; }
+    h2.slide-title { font-size: clamp(20px, 6.5vw, 34px); letter-spacing: -0.5px; }
+    h3.section-title { font-size: 16px; }
+    .subtitle { font-size: 13px; max-width: 100%; }
+
+    .cover-title { font-size: clamp(26px, 9vw, 44px); letter-spacing: -2px; }
+    .cover-subtitle { font-size: 13px; margin-bottom: 16px; max-width: 100%; }
+    .cover-badge { font-size: 10px; padding: 5px 12px; margin-bottom: 16px; }
+    .cover-meta { font-size: 11px; gap: 10px; flex-wrap: wrap; }
+
+    .logo-fixed { top: 12px; left: 12px; height: 22px; }
+    .slide-counter { bottom: 10px; right: 10px; font-size: 11px; }
+    .nav-arrow { width: 36px; height: 36px; }
+    .nav-arrow.prev { left: 6px; }
+    .nav-arrow.next { right: 6px; }
+    .nav-arrow svg { width: 15px; height: 15px; }
+    .nav-dot { width: 5px; height: 5px; }
+    .nav-dot.active { width: 16px; }
+
+    .tag { font-size: 10px; padding: 5px 12px; letter-spacing: 1px; margin-bottom: 10px; }
+    .divider { margin: 10px 0; }
+
+    /* Grids */
+    .module-grid,
+    .price-grid,
+    .cards-grid { grid-template-columns: 1fr !important; }
+    .stock-features { grid-template-columns: 1fr !important; }
+
+    /* Stats */
+    .stats-row { gap: 8px; }
+    .stat-box { padding: 12px 10px; }
+    .stat-box .stat-num { font-size: clamp(22px, 7vw, 34px); }
+    .stat-box .stat-label { font-size: 12px; }
+
+    /* Problem list */
+    .problem-list { gap: 8px; margin-top: 12px; }
+    .problem-list li { padding: 10px 12px; gap: 10px; }
+    .problem-list li .icon { width: 30px; height: 30px; min-width: 30px; font-size: 13px; }
+    .problem-list li .text strong { font-size: 13px; margin-bottom: 2px; }
+    .problem-list li .text span { font-size: 12px; }
+
+    /* Cards */
+    .card { padding: 14px 16px; }
+    .card .card-icon { font-size: 22px; margin-bottom: 8px; }
+    .card .card-title { font-size: 14px; }
+    .card .card-desc { font-size: 13px; }
+    .cards-grid { gap: 10px; margin-top: 14px; }
+
+    /* Highlight */
+    .highlight-box { padding: 16px 18px; border-radius: 14px; }
+    .highlight-box .big-num { font-size: clamp(30px, 10vw, 52px); }
+    .highlight-box .big-label { font-size: 14px; }
+    .highlight-box p { font-size: 13px; }
+
+    /* Pillars */
+    .pillars { gap: 8px; }
+    .pillar { min-width: 110px; max-width: 160px; padding: 14px 10px; border-radius: 12px; }
+    .pillar .pillar-icon { font-size: 22px; margin-bottom: 6px; }
+    .pillar .pillar-title { font-size: 13px; margin-bottom: 4px; }
+    .pillar .pillar-desc { font-size: 12px; }
+
+    /* Roadmap */
+    .roadmap-item { padding: 10px 14px; }
+    .roadmap-item .phase-badge { font-size: 10px; padding: 3px 8px; }
+    .roadmap-item .phase-title { font-size: 14px; }
+    .roadmap-item .phase-desc { font-size: 12px; }
+    .roadmap-bar { height: 6px; }
+
+    /* Timeline */
+    .timeline-h { gap: 0; }
+    .tl-step { min-width: 60px; }
+    .tl-label { font-size: 10px; }
+    .tl-sub { display: none; }
+    .tl-dot { width: 30px; height: 30px; font-size: 12px; }
+    .tl-time { font-size: 9px; margin-top: 4px; }
+
+    /* Projeção */
+    .proj-col { padding: 14px 12px; border-radius: 12px; }
+    .proj-col .proj-clients { font-size: 11px; }
+    .proj-col .proj-revenue { font-size: clamp(20px, 6vw, 30px); }
+    .proj-col .proj-monthly { font-size: 12px; }
+    .proj-bar-container { height: 60px; }
+    .proj-badge { font-size: 9px; }
+
+    /* Check items */
+    .check-item { padding: 10px 12px; }
+    .check-item .check-icon { width: 24px; height: 24px; min-width: 24px; font-size: 12px; }
+    .check-item strong { font-size: 14px; }
+    .check-item span { font-size: 12px; }
+    .check-grid { gap: 8px; margin-top: 12px; }
+
+    /* Marketplace */
+    .marketplace-row { gap: 10px; margin-top: 16px; }
+    .marketplace-card { min-width: 110px; padding: 14px 10px; border-radius: 12px; }
+    .marketplace-card .mp-logo { font-size: 20px; }
+    .marketplace-card .mp-name { font-size: 14px; }
+    .marketplace-card .mp-badge { font-size: 10px; padding: 3px 8px; }
+
+    /* OS Flow */
+    .os-step { padding: 10px 8px; border-radius: 10px; }
+    .os-step .os-icon { font-size: 20px; margin-bottom: 4px; }
+    .os-step .os-name { font-size: 12px; }
+
+    /* Arch */
+    .arch-layer { font-size: 12px; padding: 10px 12px; }
+    .tenant-box { font-size: 12px; padding: 8px; }
+
+    /* Total value */
+    .total-value { font-size: clamp(36px, 12vw, 72px); letter-spacing: -2px; }
+    .total-label { font-size: 12px; letter-spacing: 2px; }
+    .total-note { font-size: 13px; }
+    .total-chip { font-size: 12px; padding: 5px 12px; }
+
+    /* Vision */
+    .vision-big { font-size: clamp(18px, 6vw, 30px); margin-bottom: 16px; }
+
+    /* Dash */
+    .dash-kpi .kpi-val { font-size: 17px; }
+    .dash-body { padding: 12px; gap: 8px; }
+
+    /* ROI */
+    .roi-grid { gap: 16px; }
+    .roi-field label { font-size: 11px; }
+    .roi-field input, .roi-field select { font-size: 14px; padding: 10px 12px; border-radius: 10px; }
+    .roi-val-display { font-size: 18px; }
+    .roi-result-card { padding: 12px 16px; border-radius: 12px; }
+    .roi-result-card .res-val { font-size: clamp(18px, 5vw, 28px); }
+    .roi-results { gap: 10px; }
+    .roi-inputs { gap: 12px; }
+
+    /* Feature list */
+    .feature-list li { font-size: 14px; }
+
+    /* module item */
+    .module-item { padding: 10px 12px; gap: 10px; }
+    .module-item .mod-icon { width: 34px; height: 34px; min-width: 34px; font-size: 15px; }
+    .module-item .mod-info strong { font-size: 14px; }
+    .module-item .mod-info span { font-size: 12px; }
+
+    /* Price card */
+    .price-card { padding: 14px 12px; }
+    .price-card .mod-name { font-size: 13px; }
+    .price-card .mod-price { font-size: 22px; }
+    .price-card .mod-sub { font-size: 12px; }
+
+    /* Comp table */
+    .comp-table td { font-size: 13px; padding: 10px 12px; }
+    .comp-table th { font-size: 11px; padding: 0 12px 6px; }
+  }
 </style>
 </head>
 <body>
@@ -892,7 +1173,7 @@
   <div class="slide" id="slide-0" style="background:#fff;">
     <div class="cover-bg"></div>
     <div class="cover-grid"></div>
-    <div class="slide-content" style="display:flex;align-items:center;gap:60px;justify-content:space-between;">
+    <div class="slide-content cover-flex" style="display:flex;align-items:center;gap:60px;justify-content:space-between;">
       <div class="cover-content s-anim">
         <div class="s-anim cover-badge">
           ✦ MindCorpWeb · 2025
