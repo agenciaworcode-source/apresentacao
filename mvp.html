@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVP — Sistema de Gestão para Assistência Técnica · MindCorpWeb</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #ff8353;
+    --orange-light: #ffb08a;
+    --orange-dark: #e5603a;
+    --orange-glow: rgba(255,131,83,0.15);
+    --white: #ffffff;
+    --gray-50: #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #ebebeb;
+    --gray-400: #aaa;
+    --gray-600: #666;
+    --gray-800: #333;
+    --dark: #111;
+    --font: 'Inter', sans-serif;
+  }
+
+  html, body { width:100%; height:100%; overflow:hidden; font-family:var(--font); background:#fff; }
+
+  /* ── LOGO ── */
+  .logo-fixed {
+    position:fixed; top:28px; left:36px; z-index:1000;
+    height:36px; pointer-events:none;
+  }
+  .logo-fixed img { height:100%; width:auto; display:block; }
+
+  /* ── COUNTER ── */
+  .slide-counter {
+    position:fixed; bottom:24px; right:36px; z-index:1000;
+    font-size:12px; font-weight:500; color:var(--gray-400); letter-spacing:1px;
+  }
+
+  /* ── DOTS ── */
+  .nav-dots {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    z-index:1000; display:flex; gap:6px; align-items:center;
+  }
+  .nav-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--gray-200); cursor:pointer;
+    transition:all 0.3s ease;
+  }
+  .nav-dot.active { background:var(--orange); width:20px; border-radius:3px; }
+
+  /* ── ARROWS ── */
+  .nav-arrow {
+    position:fixed; top:50%; transform:translateY(-50%); z-index:1000;
+    width:44px; height:44px; border-radius:50%;
+    border:1.5px solid var(--gray-200);
+    background:rgba(255,255,255,0.85); backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all 0.2s ease; color:var(--gray-600);
+  }
+  .nav-arrow:hover { border-color:var(--orange); color:var(--orange); background:white; }
+  .nav-arrow.prev { left:16px; }
+  .nav-arrow.next { right:16px; }
+  .nav-arrow svg { width:18px; height:18px; }
+
+  /* ── SLIDE BASE ── */
+  #slides-wrapper { width:100%; height:100%; position:relative; overflow:hidden; }
+
+  .slide {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    padding:80px 100px 60px;
+    opacity:0; transform:translateX(60px);
+    transition:none; pointer-events:none;
+  }
+  .slide.active {
+    opacity:1; transform:translateX(0); pointer-events:all;
+    transition:opacity 0.55s cubic-bezier(0.4,0,0.2,1),
+                transform 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+  .slide.exit-left {
+    opacity:0; transform:translateX(-60px); pointer-events:none;
+    transition:opacity 0.45s cubic-bezier(0.4,0,0.2,1),
+                transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+  .slide.exit-right {
+    opacity:0; transform:translateX(60px); pointer-events:none;
+    transition:opacity 0.45s cubic-bezier(0.4,0,0.2,1),
+                transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* stagger */
+  .slide.active .s-anim { animation:slideUp 0.55s cubic-bezier(0.4,0,0.2,1) both; }
+  .slide.active .s-anim:nth-child(1) { animation-delay:0.08s; }
+  .slide.active .s-anim:nth-child(2) { animation-delay:0.16s; }
+  .slide.active .s-anim:nth-child(3) { animation-delay:0.24s; }
+  .slide.active .s-anim:nth-child(4) { animation-delay:0.32s; }
+  .slide.active .s-anim:nth-child(5) { animation-delay:0.40s; }
+  .slide.active .s-anim:nth-child(6) { animation-delay:0.48s; }
+  .slide.active .s-anim:nth-child(7) { animation-delay:0.56s; }
+  .slide.active .s-anim:nth-child(8) { animation-delay:0.64s; }
+  @keyframes slideUp {
+    from { opacity:0; transform:translateY(28px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── GLOW ── */
+  .bg-glow {
+    position:absolute; border-radius:50%;
+    filter:blur(90px); pointer-events:none; z-index:0;
+  }
+  .glow-tl  { width:500px; height:500px; top:-200px; left:-150px; background:var(--orange-glow); }
+  .glow-br  { width:400px; height:400px; bottom:-150px; right:-100px; background:var(--orange-glow); }
+  .glow-c   { width:600px; height:400px; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--orange-glow); opacity:0.55; }
+
+  .slide-content { position:relative; z-index:1; width:100%; max-width:1200px; }
+
+  /* ── TAG ── */
+  .tag {
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,131,83,0.1); border:1px solid rgba(255,131,83,0.25);
+    color:var(--orange); font-size:11px; font-weight:700;
+    letter-spacing:2px; text-transform:uppercase;
+    padding:5px 14px; border-radius:100px; margin-bottom:20px;
+  }
+  .tag::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); }
+
+  /* ── HEADINGS ── */
+  h2.slide-title {
+    font-size:clamp(32px,4vw,52px); font-weight:800;
+    color:var(--dark); letter-spacing:-1.5px; line-height:1.15; margin-bottom:10px;
+  }
+  h2.slide-title span { color:var(--orange); }
+
+  .subtitle {
+    font-size:clamp(15px,1.7vw,20px); color:var(--gray-600);
+    font-weight:400; line-height:1.65; max-width:660px;
+  }
+  .subtitle strong { color:var(--dark); font-weight:600; }
+
+  .divider { width:48px; height:4px; background:var(--orange); border-radius:2px; margin:18px 0; }
+
+  /* ── TWO COL ── */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:20px; }
+
+  /* ── HIGHLIGHT ── */
+  .highlight-box {
+    background:linear-gradient(135deg,var(--orange) 0%,var(--orange-dark) 100%);
+    border-radius:20px; padding:32px 36px; color:white;
+    position:relative; overflow:hidden;
+  }
+  .highlight-box::after {
+    content:''; position:absolute; top:-60px; right:-60px;
+    width:200px; height:200px; background:rgba(255,255,255,0.08); border-radius:50%;
+  }
+  .highlight-box .big-num {
+    font-size:clamp(44px,6vw,80px); font-weight:900;
+    letter-spacing:-3px; line-height:1;
+  }
+  .highlight-box .big-label { font-size:16px; font-weight:500; opacity:0.9; margin-top:6px; }
+  .highlight-box p { font-size:14px; opacity:0.85; margin-top:8px; line-height:1.55; }
+
+  /* ── CARD ── */
+  .card {
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:16px; padding:24px; position:relative; overflow:hidden;
+    transition:all 0.3s;
+  }
+  .card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg,var(--orange),var(--orange-light));
+    border-radius:16px 16px 0 0;
+  }
+  .card:hover { box-shadow:0 8px 32px rgba(255,131,83,0.13); border-color:var(--orange-light); transform:translateY(-2px); }
+  .card .card-icon { font-size:28px; margin-bottom:12px; }
+  .card .card-title { font-size:15px; font-weight:700; color:var(--dark); margin-bottom:6px; }
+  .card .card-desc { font-size:13px; color:var(--gray-600); line-height:1.55; }
+
+  /* ── CHECK ITEM ── */
+  .check-item {
+    display:flex; align-items:flex-start; gap:12px;
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:12px; padding:15px 18px;
+  }
+  .check-item .ci-icon {
+    width:34px; height:34px; min-width:34px;
+    background:rgba(255,131,83,0.1); border-radius:9px;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .check-item strong { font-size:14px; font-weight:700; color:var(--dark); display:block; margin-bottom:2px; }
+  .check-item span { font-size:13px; color:var(--gray-600); }
+
+  /* ── FEATURE LIST ── */
+  .feature-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .feature-list li {
+    display:flex; align-items:center; gap:10px;
+    font-size:15px; color:var(--gray-800); font-weight:500;
+  }
+  .feature-list li::before {
+    content:''; width:22px; height:22px; min-width:22px;
+    background:rgba(255,131,83,0.1); border-radius:50%;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff8353' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size:13px; background-position:center; background-repeat:no-repeat;
+  }
+
+  /* ── X LIST (removidos) ── */
+  .x-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .x-list li {
+    display:flex; align-items:center; gap:10px;
+    font-size:15px; color:var(--gray-400); font-weight:500;
+    text-decoration:line-through; text-decoration-color:rgba(200,200,200,0.8);
+  }
+  .x-list li::before {
+    content:''; width:22px; height:22px; min-width:22px;
+    background:rgba(200,200,200,0.12); border-radius:50%;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E");
+    background-size:12px; background-position:center; background-repeat:no-repeat;
+  }
+
+  /* ── STATUS FLOW ── */
+  .status-flow { display:flex; align-items:center; gap:0; margin-top:24px; flex-wrap:wrap; }
+  .status-step {
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:12px; padding:16px 14px; text-align:center;
+    min-width:120px; flex:1; transition:all 0.3s;
+  }
+  .status-step:hover { border-color:var(--orange); }
+  .status-step .st-icon { font-size:22px; margin-bottom:6px; }
+  .status-step .st-name { font-size:13px; font-weight:700; color:var(--dark); }
+  .status-arrow { font-size:18px; color:var(--gray-200); margin:0 4px; flex-shrink:0; }
+
+  /* ── COMPARE BOX ── */
+  .compare-wrap { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px; }
+  .compare-col {
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:16px; padding:24px; position:relative; overflow:hidden;
+  }
+  .compare-col.full { border-color:var(--gray-200); }
+  .compare-col.mvp  { border-color:var(--orange); box-shadow:0 4px 24px rgba(255,131,83,0.1); }
+  .compare-col .col-label {
+    font-size:11px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; margin-bottom:14px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .compare-col.full .col-label { color:var(--gray-400); }
+  .compare-col.mvp  .col-label { color:var(--orange); }
+  .compare-col .col-price {
+    font-size:32px; font-weight:900; letter-spacing:-1px; margin-bottom:16px;
+  }
+  .compare-col.full .col-price { color:var(--gray-400); }
+  .compare-col.mvp  .col-price { color:var(--orange); }
+  .compare-col .mvp-badge {
+    position:absolute; top:16px; right:16px;
+    background:rgba(255,131,83,0.1); color:var(--orange);
+    font-size:10px; font-weight:700; letter-spacing:1px;
+    padding:4px 10px; border-radius:100px;
+  }
+
+  /* ── MODULE GRID ── */
+  .module-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:20px; }
+  .module-item {
+    display:flex; align-items:center; gap:12px;
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:12px; padding:16px; transition:all 0.25s;
+  }
+  .module-item:hover { border-color:var(--orange); background:rgba(255,131,83,0.02); }
+  .module-item .mi-icon {
+    width:42px; height:42px; min-width:42px;
+    background:rgba(255,131,83,0.1); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+  }
+  .module-item .mi-info strong { font-size:14px; font-weight:700; color:var(--dark); display:block; }
+  .module-item .mi-info span { font-size:12px; color:var(--gray-400); }
+
+  /* ── STATS ── */
+  .stats-row { display:flex; gap:20px; margin-top:24px; flex-wrap:wrap; }
+  .stat-box {
+    flex:1; min-width:140px;
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:16px; padding:24px 20px; text-align:center;
+  }
+  .stat-box .stat-num { font-size:clamp(26px,3vw,42px); font-weight:800; color:var(--orange); letter-spacing:-1px; line-height:1; }
+  .stat-box .stat-label { font-size:13px; color:var(--gray-600); margin-top:6px; font-weight:500; }
+
+  /* ── INVEST TOTAL ── */
+  .invest-center {
+    text-align:center; position:relative; z-index:1;
+  }
+  .invest-value {
+    font-size:clamp(72px,11vw,130px); font-weight:900;
+    color:var(--dark); letter-spacing:-5px; line-height:1;
+    white-space:nowrap;
+  }
+  .invest-value span { color:var(--orange); }
+  .invest-note {
+    font-size:17px; color:var(--gray-400); margin-top:16px;
+    max-width:520px; text-align:center; margin-left:auto; margin-right:auto;
+    line-height:1.6;
+  }
+  .invest-chips { display:flex; gap:10px; justify-content:center; margin-top:24px; flex-wrap:wrap; }
+  .invest-chip {
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:100px; padding:8px 18px;
+    font-size:13px; font-weight:600; color:var(--gray-600);
+    display:flex; align-items:center; gap:6px;
+  }
+
+  /* ── SCOPE TABLE ── */
+  .scope-table { width:100%; border-collapse:separate; border-spacing:0 8px; margin-top:16px; }
+  .scope-table th { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--gray-400); font-weight:700; padding:0 16px 8px; text-align:left; }
+  .scope-table td { padding:14px 16px; background:white; font-size:14px; color:var(--gray-800); }
+  .scope-table td:first-child { border-radius:10px 0 0 10px; font-weight:600; }
+  .scope-table td:last-child { border-radius:0 10px 10px 0; }
+  .scope-table .inc td { }
+  .scope-table .exc td { opacity:0.45; }
+  .scope-table .exc td:last-child { color:var(--gray-400); }
+  .badge-inc { display:inline-flex; align-items:center; gap:4px; background:rgba(34,197,94,0.1); color:#16a34a; font-size:11px; font-weight:700; letter-spacing:0.5px; padding:3px 10px; border-radius:100px; }
+  .badge-exc { display:inline-flex; align-items:center; gap:4px; background:var(--gray-100); color:var(--gray-400); font-size:11px; font-weight:700; padding:3px 10px; border-radius:100px; }
+
+  /* ── COVER ── */
+  .cover-bg { position:absolute; inset:0; z-index:0;
+    background:radial-gradient(ellipse 80% 60% at 65% 50%,rgba(255,131,83,0.08) 0%,transparent 70%),
+               radial-gradient(ellipse 50% 70% at 10% 80%,rgba(255,131,83,0.06) 0%,transparent 60%); }
+  .cover-grid { position:absolute; inset:0; z-index:0;
+    background-image:linear-gradient(rgba(255,131,83,0.04) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,131,83,0.04) 1px,transparent 1px);
+    background-size:60px 60px; }
+  .cover-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,131,83,0.1); border:1px solid rgba(255,131,83,0.3);
+    color:var(--orange); font-size:12px; font-weight:700;
+    letter-spacing:2px; text-transform:uppercase;
+    padding:7px 18px; border-radius:100px; margin-bottom:28px;
+  }
+  .cover-title {
+    font-size:clamp(36px,5vw,68px); font-weight:900;
+    color:var(--dark); letter-spacing:-2.5px; line-height:1.08; margin-bottom:16px;
+  }
+  .cover-title span { color:var(--orange); }
+  .cover-subtitle {
+    font-size:clamp(16px,1.8vw,21px); color:var(--gray-600);
+    font-weight:400; line-height:1.55; max-width:560px; margin-bottom:32px;
+  }
+  .cover-meta { display:flex; align-items:center; gap:20px; font-size:14px; color:var(--gray-400); }
+  .cover-meta .dot { width:4px; height:4px; border-radius:50%; background:var(--gray-200); }
+
+  /* ── MVP BADGE STRIP ── */
+  .mvp-strip {
+    display:inline-flex; align-items:center; gap:10px;
+    background:rgba(255,131,83,0.07); border:1.5px solid rgba(255,131,83,0.2);
+    border-radius:14px; padding:14px 22px; margin-top:24px;
+    font-size:14px; font-weight:600; color:var(--dark);
+  }
+  .mvp-strip .ms-tag {
+    background:var(--orange); color:white;
+    font-size:11px; font-weight:800; letter-spacing:1px;
+    padding:4px 10px; border-radius:100px;
+  }
+
+  /* cover visual */
+  .cover-visual {
+    position:relative; flex-shrink:0;
+  }
+  .mockup-window {
+    width:320px;
+    background:white;
+    border:1.5px solid var(--gray-200);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,131,83,0.08);
+  }
+  .mw-header { background:var(--gray-50); border-bottom:1px solid var(--gray-200); padding:12px 16px; display:flex; align-items:center; gap:6px; }
+  .mw-dot { width:9px; height:9px; border-radius:50%; }
+  .mw-body { padding:16px; }
+  .mw-row { display:flex; align-items:center; gap:10px; padding:10px; background:var(--gray-50); border-radius:10px; margin-bottom:8px; }
+  .mw-icon { width:32px; height:32px; background:rgba(255,131,83,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .mw-label { font-size:12px; font-weight:700; color:var(--dark); }
+  .mw-sub { font-size:10px; color:var(--gray-400); }
+  .mw-badge { margin-left:auto; font-size:10px; font-weight:700; padding:3px 8px; border-radius:100px; }
+  .mw-badge.orange { background:rgba(255,131,83,0.12); color:var(--orange); }
+  .mw-badge.green { background:rgba(34,197,94,0.1); color:#16a34a; }
+  .mw-badge.gray { background:var(--gray-100); color:var(--gray-400); }
+
+  /* timeline horizontal */
+  .timeline-h { display:flex; align-items:flex-start; gap:0; margin-top:28px; position:relative; }
+  .timeline-h::before { content:''; position:absolute; top:22px; left:0; right:0; height:2px; background:var(--gray-200); z-index:0; }
+  .tl-step { flex:1; text-align:center; position:relative; z-index:1; padding:0 8px; }
+  .tl-dot {
+    width:44px; height:44px; border-radius:50%; background:white;
+    border:2px solid var(--gray-200); display:flex; align-items:center; justify-content:center;
+    margin:0 auto 10px; font-size:18px; position:relative;
+  }
+  .tl-step.done .tl-dot { border-color:var(--orange); background:rgba(255,131,83,0.1); }
+  .tl-step.active-step .tl-dot { border-color:var(--orange); background:var(--orange); box-shadow:0 0 0 6px rgba(255,131,83,0.15); }
+  .tl-label { font-size:13px; font-weight:700; color:var(--dark); margin-bottom:4px; }
+  .tl-sub { font-size:11px; color:var(--gray-400); line-height:1.4; }
+  .tl-time { font-size:11px; font-weight:700; color:var(--orange); background:rgba(255,131,83,0.08); border-radius:100px; padding:2px 8px; margin-top:6px; display:inline-block; }
+
+  /* pillar */
+  .pillars { display:flex; gap:16px; flex-wrap:wrap; margin-top:24px; }
+  .pillar {
+    flex:1; min-width:140px;
+    background:white; border:1.5px solid var(--gray-200);
+    border-radius:16px; padding:22px 16px; text-align:center; transition:all 0.3s;
+  }
+  .pillar:hover { border-color:var(--orange); box-shadow:0 4px 24px rgba(255,131,83,0.1); transform:translateY(-2px); }
+  .pillar .pi { font-size:30px; margin-bottom:10px; }
+  .pillar .pt { font-size:14px; font-weight:700; color:var(--dark); margin-bottom:5px; }
+  .pillar .pd { font-size:12px; color:var(--gray-600); line-height:1.5; }
+
+  ::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+
+<!-- LOGO -->
+<div class="logo-fixed">
+  <img src="assets/Group 7.png" alt="MindCorpWeb" id="logo-img">
+</div>
+
+<!-- COUNTER -->
+<div class="slide-counter"><span id="cur-slide">1</span> / <span id="tot-slides">14</span></div>
+
+<!-- DOTS -->
+<div class="nav-dots" id="nav-dots"></div>
+
+<!-- ARROWS -->
+<button class="nav-arrow prev" onclick="changeSlide(-1)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<button class="nav-arrow next" onclick="changeSlide(1)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
+
+<div id="slides-wrapper">
+
+  <!-- ══ SLIDE 1 — CAPA ══ -->
+  <div class="slide" id="slide-0" style="background:#fff;">
+    <div class="cover-bg"></div>
+    <div class="cover-grid"></div>
+    <div class="slide-content" style="display:flex;align-items:center;gap:60px;justify-content:space-between;">
+      <div style="position:relative;z-index:1;max-width:620px;">
+        <div class="cover-badge s-anim">✦ MindCorpWeb · Proposta MVP · 2025</div>
+        <h1 class="cover-title s-anim">Sistema de<br>Gestão para<br><span>Assistência Técnica</span></h1>
+        <p class="cover-subtitle s-anim">Versão MVP para organização da operação — foco no essencial, no prazo certo, no investimento certo.</p>
+        <div class="cover-meta s-anim">
+          <span>Proposta Técnica</span>
+          <span class="dot"></span>
+          <span>Versão Reduzida</span>
+          <span class="dot"></span>
+          <span style="color:var(--orange);font-weight:700;">R$20.000</span>
+        </div>
+      </div>
+      <div class="cover-visual s-anim">
+        <div class="mockup-window">
+          <div class="mw-header">
+            <div class="mw-dot" style="background:#ff5f57"></div>
+            <div class="mw-dot" style="background:#febc2e"></div>
+            <div class="mw-dot" style="background:#28c840"></div>
+            <span style="font-size:11px;color:#aaa;margin-left:8px;">Sistema MVP · OS</span>
+          </div>
+          <div class="mw-body">
+            <div class="mw-row">
+              <div class="mw-icon">🔧</div>
+              <div><div class="mw-label">OS #0042 · iPhone 12</div><div class="mw-sub">João Silva</div></div>
+              <div class="mw-badge orange">Em reparo</div>
+            </div>
+            <div class="mw-row">
+              <div class="mw-icon">📱</div>
+              <div><div class="mw-label">OS #0041 · Samsung A54</div><div class="mw-sub">Maria Costa</div></div>
+              <div class="mw-badge green">Pronto</div>
+            </div>
+            <div class="mw-row">
+              <div class="mw-icon">💻</div>
+              <div><div class="mw-label">OS #0040 · Notebook Dell</div><div class="mw-sub">Carlos Ramos</div></div>
+              <div class="mw-badge gray">Aguard. peça</div>
+            </div>
+            <div style="margin-top:12px;background:rgba(255,131,83,0.06);border-radius:10px;padding:12px;display:flex;justify-content:space-between;">
+              <span style="font-size:12px;font-weight:600;color:#666;">OS abertas hoje</span>
+              <span style="font-size:16px;font-weight:800;color:var(--orange);">7</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 2 — CONTEXTO ══ -->
+  <div class="slide" id="slide-1" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Contexto</div>
+      <h2 class="slide-title s-anim">De onde viemos: o <span>projeto completo</span></h2>
+      <div class="divider s-anim"></div>
+      <p class="subtitle s-anim">Anteriormente foi apresentado um projeto completo de <strong>ERP SaaS para assistências técnicas</strong> — uma plataforma escalável para múltiplas empresas.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px;" class="s-anim">
+        <div class="card">
+          <div class="card-icon">🏢</div>
+          <div class="card-title">Multiempresa (SaaS)</div>
+          <div class="card-desc">Dezenas de assistências usando a mesma plataforma com dados isolados.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🛍️</div>
+          <div class="card-title">Hub de marketplaces</div>
+          <div class="card-desc">Integração nativa com Mercado Livre, Shopee e outros canais de venda.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🧾</div>
+          <div class="card-title">Fiscal completo</div>
+          <div class="card-desc">NF-e, NFS-e e obrigações fiscais integradas sem sistemas externos.</div>
+        </div>
+      </div>
+      <div class="mvp-strip s-anim">
+        <span class="ms-tag">PROJETO ORIGINAL</span>
+        Investimento estimado:
+        <strong style="font-size:18px;color:var(--orange);letter-spacing:-0.5px;">R$200.000</strong>
+        · Prazo: 5 a 7 meses · Equipe: 2–3 devs
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 3 — NOVA PROPOSTA ══ -->
+  <div class="slide" id="slide-2" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Nova proposta</div>
+      <h2 class="slide-title s-anim">Uma versão <span>MVP acessível</span> para começar agora</h2>
+      <div class="divider s-anim"></div>
+      <p class="subtitle s-anim">Para viabilizar um início mais rápido e com menor investimento, esta proposta apresenta uma versão enxuta do sistema, focada no que <strong>realmente importa para o dia a dia da operação</strong>.</p>
+      <div class="pillars s-anim">
+        <div class="pillar">
+          <div class="pi">🎯</div>
+          <div class="pt">Foco no essencial</div>
+          <div class="pd">Apenas o que resolve o problema operacional real da assistência técnica</div>
+        </div>
+        <div class="pillar">
+          <div class="pi">⚡</div>
+          <div class="pt">Entrega rápida</div>
+          <div class="pd">5 a 7 semanas de desenvolvimento — sem meses de espera</div>
+        </div>
+        <div class="pillar">
+          <div class="pi">💰</div>
+          <div class="pt">Investimento acessível</div>
+          <div class="pd">R$20.000 frente a R$200.000 do projeto completo</div>
+        </div>
+        <div class="pillar">
+          <div class="pi">📈</div>
+          <div class="pt">Evolutivo</div>
+          <div class="pd">Base que pode crescer para o sistema completo no futuro</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 4 — DIFERENÇA ENTRE AS PROPOSTAS ══ -->
+  <div class="slide" id="slide-3" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Comparativo</div>
+      <h2 class="slide-title s-anim">Completo vs. <span>MVP</span> — o que muda?</h2>
+      <div class="divider s-anim"></div>
+      <div class="compare-wrap s-anim">
+        <div class="compare-col full">
+          <div class="col-label">⬛ Projeto Completo · ERP SaaS</div>
+          <div class="col-price">R$200.000</div>
+          <ul class="x-list" style="text-decoration:none;">
+            <li style="text-decoration:none;color:var(--gray-600);">Arquitetura multiempresa (SaaS)</li>
+            <li style="text-decoration:none;color:var(--gray-600);">Integrações com marketplaces</li>
+            <li style="text-decoration:none;color:var(--gray-600);">Emissão fiscal (NF-e / NFS-e)</li>
+            <li style="text-decoration:none;color:var(--gray-600);">PDV completo com NFC-e</li>
+            <li style="text-decoration:none;color:var(--gray-600);">Dashboard BI e relatórios avançados</li>
+            <li style="text-decoration:none;color:var(--gray-600);">Billing e gestão de planos SaaS</li>
+            <li style="text-decoration:none;color:var(--gray-600);">5 a 7 meses de desenvolvimento</li>
+          </ul>
+        </div>
+        <div class="compare-col mvp">
+          <div class="mvp-badge">✦ ESTA PROPOSTA</div>
+          <div class="col-label">🟠 Versão MVP · Uso interno</div>
+          <div class="col-price">R$20.000</div>
+          <ul class="feature-list">
+            <li>Sistema único para uso interno</li>
+            <li>Gestão completa de Ordens de Serviço</li>
+            <li>Cadastro de clientes e aparelhos</li>
+            <li>Controle de peças e estoque simples</li>
+            <li>Histórico de atendimentos</li>
+            <li>Interface administrativa web</li>
+            <li>5 a 7 semanas de desenvolvimento</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 5 — FUNCIONALIDADES MVP ══ -->
+  <div class="slide" id="slide-4" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Funcionalidades</div>
+      <h2 class="slide-title s-anim">Tudo que o <span>MVP entrega</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="module-grid s-anim">
+        <div class="module-item">
+          <div class="mi-icon">👥</div>
+          <div class="mi-info"><strong>Cadastro de Clientes</strong><span>Nome, contato e histórico</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mi-icon">📱</div>
+          <div class="mi-info"><strong>Cadastro de Aparelhos</strong><span>Modelo, marca, defeito</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mi-icon">🔧</div>
+          <div class="mi-info"><strong>Ordem de Serviço</strong><span>Ciclo completo de OS</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mi-icon">🔩</div>
+          <div class="mi-info"><strong>Controle de Peças</strong><span>Uso por OS</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mi-icon">📦</div>
+          <div class="mi-info"><strong>Estoque Simples</strong><span>Entrada, saída e saldo</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mi-icon">📋</div>
+          <div class="mi-info"><strong>Histórico de Serviços</strong><span>Por cliente e aparelho</span></div>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:16px 22px;background:rgba(255,131,83,0.06);border:1px solid rgba(255,131,83,0.15);border-radius:12px;font-size:14px;color:var(--gray-600);" class="s-anim">
+        💡 Sistema de uso <strong style="color:var(--dark);">interno único</strong> — sem SaaS, sem integração com marketplaces e sem emissão fiscal nesta versão.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 6 — MÓDULO CLIENTES ══ -->
+  <div class="slide" id="slide-5" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Módulo</div>
+      <h2 class="slide-title s-anim">Gestão de <span>Clientes</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="two-col s-anim">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="check-item">
+            <div class="ci-icon">👤</div>
+            <div><strong>Cadastro completo</strong><span>Nome, CPF/CNPJ, telefone, endereço e e-mail</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">📞</div>
+            <div><strong>Múltiplos contatos</strong><span>Registro de WhatsApp, celular e contato alternativo</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">🔍</div>
+            <div><strong>Busca rápida</strong><span>Localização por nome, telefone ou CPF em tempo real</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">📋</div>
+            <div><strong>Histórico de atendimentos</strong><span>Todas as OS do cliente em uma tela só</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">📱</div>
+            <div><strong>Aparelhos vinculados</strong><span>Todos os equipamentos já atendidos do cliente</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="mockup-window" style="width:100%;">
+            <div class="mw-header">
+              <div class="mw-dot" style="background:#ff5f57"></div>
+              <div class="mw-dot" style="background:#febc2e"></div>
+              <div class="mw-dot" style="background:#28c840"></div>
+              <span style="font-size:11px;color:#aaa;margin-left:8px;">Clientes</span>
+            </div>
+            <div class="mw-body">
+              <div style="background:var(--gray-50);border-radius:8px;padding:8px 12px;font-size:12px;color:#aaa;margin-bottom:10px;">🔍 Buscar cliente...</div>
+              <div class="mw-row"><div class="mw-icon">👤</div><div><div class="mw-label">João Silva</div><div class="mw-sub">(11) 99999-0001 · 4 OS</div></div><div class="mw-badge orange">Ativo</div></div>
+              <div class="mw-row"><div class="mw-icon">👤</div><div><div class="mw-label">Maria Costa</div><div class="mw-sub">(11) 98888-0002 · 2 OS</div></div><div class="mw-badge green">Ativo</div></div>
+              <div class="mw-row"><div class="mw-icon">👤</div><div><div class="mw-label">Carlos Ramos</div><div class="mw-sub">(11) 97777-0003 · 1 OS</div></div><div class="mw-badge gray">Ativo</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 7 — MÓDULO OS ══ -->
+  <div class="slide" id="slide-6" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Módulo principal</div>
+      <h2 class="slide-title s-anim">Ordem de <span>Serviço</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="status-flow s-anim">
+        <div class="status-step"><div class="st-icon">📥</div><div class="st-name">Recebido</div></div>
+        <div class="status-arrow">→</div>
+        <div class="status-step"><div class="st-icon">🔍</div><div class="st-name">Em análise</div></div>
+        <div class="status-arrow">→</div>
+        <div class="status-step"><div class="st-icon">⏳</div><div class="st-name">Aguard. peça</div></div>
+        <div class="status-arrow">→</div>
+        <div class="status-step"><div class="st-icon">🔧</div><div class="st-name">Em reparo</div></div>
+        <div class="status-arrow">→</div>
+        <div class="status-step"><div class="st-icon">✅</div><div class="st-name">Pronto</div></div>
+        <div class="status-arrow">→</div>
+        <div class="status-step"><div class="st-icon">📦</div><div class="st-name">Entregue</div></div>
+      </div>
+      <div class="two-col s-anim" style="margin-top:20px;">
+        <ul class="feature-list">
+          <li>Cadastro do aparelho com marca e modelo</li>
+          <li>Registro do defeito relatado pelo cliente</li>
+          <li>Campo de diagnóstico técnico</li>
+          <li>Atualização de status com histórico</li>
+        </ul>
+        <ul class="feature-list">
+          <li>Vinculação de peças utilizadas</li>
+          <li>Número sequencial de OS</li>
+          <li>Observações internas por OS</li>
+          <li>Histórico completo de alterações</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 8 — PEÇAS ══ -->
+  <div class="slide" id="slide-7" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Módulo</div>
+      <h2 class="slide-title s-anim">Controle de <span>Peças</span></h2>
+      <div class="divider s-anim"></div>
+      <p class="subtitle s-anim">Registro das peças consumidas em cada reparo, com rastreabilidade por ordem de serviço.</p>
+      <div class="two-col s-anim" style="margin-top:20px;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="check-item">
+            <div class="ci-icon">🔗</div>
+            <div><strong>Vinculação à Ordem de Serviço</strong><span>Cada peça usada fica registrada na OS correspondente</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">📉</div>
+            <div><strong>Baixa automática no estoque</strong><span>Ao adicionar peça à OS, o saldo em estoque é atualizado automaticamente</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">🔢</div>
+            <div><strong>Quantidade utilizada</strong><span>Registro da quantidade exata por peça em cada serviço</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">📋</div>
+            <div><strong>Histórico de utilização</strong><span>Consulta de quais peças foram usadas por OS ou por período</span></div>
+          </div>
+        </div>
+        <div class="highlight-box" style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
+          <div style="font-size:38px;">🔩</div>
+          <div style="font-size:22px;font-weight:800;color:white;letter-spacing:-0.5px;">Rastreabilidade total</div>
+          <p>Saiba exatamente quais peças foram usadas em cada reparo, por qual técnico e em qual data.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 9 — ESTOQUE ══ -->
+  <div class="slide" id="slide-8" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Módulo</div>
+      <h2 class="slide-title s-anim">Controle de <span>Estoque</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="two-col s-anim">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="check-item">
+            <div class="ci-icon">📦</div>
+            <div><strong>Cadastro de peças</strong><span>Nome, código, categoria e descrição de cada item</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">📥</div>
+            <div><strong>Entrada de estoque</strong><span>Registro de compras e reposições com data e quantidade</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">📤</div>
+            <div><strong>Saída automática</strong><span>Baixa ao vincular peça a uma OS — sem lançamento manual</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">🔢</div>
+            <div><strong>Saldo atualizado</strong><span>Quantidade disponível sempre em tempo real</span></div>
+          </div>
+          <div class="check-item">
+            <div class="ci-icon">⚠️</div>
+            <div><strong>Alerta de estoque baixo</strong><span>Sinalização quando item atinge a quantidade mínima</span></div>
+          </div>
+        </div>
+        <div class="mockup-window" style="width:100%;">
+          <div class="mw-header">
+            <div class="mw-dot" style="background:#ff5f57"></div>
+            <div class="mw-dot" style="background:#febc2e"></div>
+            <div class="mw-dot" style="background:#28c840"></div>
+            <span style="font-size:11px;color:#aaa;margin-left:8px;">Estoque de Peças</span>
+          </div>
+          <div class="mw-body">
+            <div class="mw-row">
+              <div class="mw-icon">🔋</div>
+              <div><div class="mw-label">Bateria iPhone 12</div><div class="mw-sub">Cód: BAT-IP12</div></div>
+              <div class="mw-badge green">12 un.</div>
+            </div>
+            <div class="mw-row">
+              <div class="mw-icon">📺</div>
+              <div><div class="mw-label">Tela Samsung A32</div><div class="mw-sub">Cód: TL-A32</div></div>
+              <div class="mw-badge orange">3 un.</div>
+            </div>
+            <div class="mw-row">
+              <div class="mw-icon">🔌</div>
+              <div><div class="mw-label">Conector de carga USB-C</div><div class="mw-sub">Cód: CON-USBC</div></div>
+              <div class="mw-badge" style="background:rgba(239,68,68,0.1);color:#dc2626;">1 un. ⚠️</div>
+            </div>
+            <div class="mw-row">
+              <div class="mw-icon">🎵</div>
+              <div><div class="mw-label">Alto-falante genérico</div><div class="mw-sub">Cód: AF-GEN</div></div>
+              <div class="mw-badge green">8 un.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 10 — BENEFÍCIOS ══ -->
+  <div class="slide" id="slide-9" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Resultado</div>
+      <h2 class="slide-title s-anim">O que muda com o <span>sistema implementado</span></h2>
+      <div class="divider s-anim"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px;" class="s-anim">
+        <div class="card">
+          <div class="card-icon">📋</div>
+          <div class="card-title">Fim do papel e planilha</div>
+          <div class="card-desc">Todas as ordens de serviço registradas digitalmente, com status e histórico sempre acessíveis.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔍</div>
+          <div class="card-title">Rastreabilidade total</div>
+          <div class="card-desc">Saiba exatamente onde está cada aparelho, quem está atendendo e qual o próximo passo.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📦</div>
+          <div class="card-title">Estoque sob controle</div>
+          <div class="card-desc">Peças consumidas baixam automaticamente. Sem falta inesperada, sem divergências manuais.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">👥</div>
+          <div class="card-title">Histórico do cliente</div>
+          <div class="card-desc">Atendimentos anteriores consultados em segundos, gerando mais confiança e agilidade.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">Menos erros operacionais</div>
+          <div class="card-desc">Fluxo padronizado de OS reduz esquecimentos, retrabalhos e falhas de comunicação interna.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📈</div>
+          <div class="card-title">Base para crescer</div>
+          <div class="card-desc">Sistema estruturado que pode evoluir para fiscal, PDV e marketplace conforme a necessidade.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 11 — ESCOPO ══ -->
+  <div class="slide" id="slide-10" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Escopo</div>
+      <h2 class="slide-title s-anim">O que está <span>dentro e fora</span> desta proposta</h2>
+      <div class="divider s-anim"></div>
+      <table class="scope-table s-anim">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Descrição</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="inc"><td>🔧 Ordens de Serviço</td><td>Ciclo completo com status e histórico</td><td><span class="badge-inc">✓ Incluído</span></td></tr>
+          <tr class="inc"><td>👥 Clientes</td><td>Cadastro, contato e histórico de atendimentos</td><td><span class="badge-inc">✓ Incluído</span></td></tr>
+          <tr class="inc"><td>📦 Estoque Simples</td><td>Entrada, saída e saldo de peças</td><td><span class="badge-inc">✓ Incluído</span></td></tr>
+          <tr class="inc"><td>🔩 Controle de Peças</td><td>Uso por OS e baixa automática</td><td><span class="badge-inc">✓ Incluído</span></td></tr>
+          <tr class="inc"><td>🖥️ Interface administrativa</td><td>Sistema web responsivo</td><td><span class="badge-inc">✓ Incluído</span></td></tr>
+          <tr class="exc"><td>🏢 Arquitetura SaaS</td><td>Multiempresa com billing e planos</td><td><span class="badge-exc">Não incluso</span></td></tr>
+          <tr class="exc"><td>🛍️ Marketplaces</td><td>Integração com ML, Shopee, Amazon</td><td><span class="badge-exc">Não incluso</span></td></tr>
+          <tr class="exc"><td>🧾 Emissão Fiscal</td><td>NF-e, NFS-e, SPED</td><td><span class="badge-exc">Não incluso</span></td></tr>
+          <tr class="exc"><td>🛒 PDV Completo</td><td>Ponto de venda com NFC-e</td><td><span class="badge-exc">Não incluso</span></td></tr>
+          <tr class="exc"><td>📊 Dashboard BI</td><td>Analytics avançado com indicadores</td><td><span class="badge-exc">Não incluso</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 12 — PRAZO ══ -->
+  <div class="slide" id="slide-11" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Cronograma</div>
+      <h2 class="slide-title s-anim">Entrega em <span>5 a 7 semanas</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="timeline-h s-anim">
+        <div class="tl-step done">
+          <div class="tl-dot">📐</div>
+          <div class="tl-label">Planejamento</div>
+          <div class="tl-sub">Banco de dados,<br>arquitetura, telas</div>
+          <div class="tl-time">Semana 1</div>
+        </div>
+        <div class="tl-step done">
+          <div class="tl-dot">👥</div>
+          <div class="tl-label">Clientes & OS</div>
+          <div class="tl-sub">Cadastros e<br>fluxo de OS</div>
+          <div class="tl-time">Semana 2–3</div>
+        </div>
+        <div class="tl-step active-step">
+          <div class="tl-dot">📦</div>
+          <div class="tl-label">Estoque & Peças</div>
+          <div class="tl-sub">Inventário e<br>vinculação à OS</div>
+          <div class="tl-time">Semana 4</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot">🧪</div>
+          <div class="tl-label">Testes & Ajustes</div>
+          <div class="tl-sub">QA, correções<br>e refinamentos</div>
+          <div class="tl-time">Semana 5–6</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot">🚀</div>
+          <div class="tl-label">Entrega</div>
+          <div class="tl-sub">Deploy, acesso<br>e treinamento</div>
+          <div class="tl-time">Semana 7</div>
+        </div>
+      </div>
+      <div class="stats-row s-anim" style="margin-top:28px;">
+        <div class="stat-box">
+          <div class="stat-num">1–2</div>
+          <div class="stat-label">Desenvolvedores</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">5–7</div>
+          <div class="stat-label">Semanas de desenvolvimento</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">5</div>
+          <div class="stat-label">Módulos entregues</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Sistema funcional na entrega</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 13 — INVESTIMENTO ══ -->
+  <div class="slide" id="slide-12" style="background:#fff;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(255,131,83,0.08) 0%,transparent 70%);z-index:0;"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,131,83,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,131,83,0.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;"></div>
+    <div class="slide-content" style="text-align:center;position:relative;z-index:1;">
+      <div class="tag s-anim" style="margin:0 auto 20px;">Investimento</div>
+      <div class="invest-center">
+        <div class="invest-value s-anim">R$<span>20 mil</span></div>
+        <div class="invest-note s-anim">Investimento total para desenvolvimento completo da versão MVP, incluindo planejamento, desenvolvimento, testes e entrega funcional.</div>
+        <div class="invest-chips s-anim">
+          <div class="invest-chip">📐 Planejamento</div>
+          <div class="invest-chip">💻 Desenvolvimento</div>
+          <div class="invest-chip">🧪 Testes & QA</div>
+          <div class="invest-chip">🚀 Deploy & entrega</div>
+        </div>
+        <div style="margin-top:28px;display:inline-flex;align-items:center;gap:16px;background:rgba(255,131,83,0.06);border:1.5px solid rgba(255,131,83,0.15);border-radius:16px;padding:18px 28px;" class="s-anim">
+          <div style="text-align:left;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gray-400);text-transform:uppercase;">Comparação</div>
+            <div style="font-size:15px;font-weight:700;color:var(--dark);margin-top:4px;">Projeto completo: <span style="color:var(--gray-400);text-decoration:line-through;">R$200.000</span></div>
+            <div style="font-size:15px;font-weight:700;color:var(--dark);margin-top:2px;">Versão MVP: <span style="color:var(--orange);">R$20.000</span> — 90% de economia</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 14 — CONCLUSÃO ══ -->
+  <div class="slide" id="slide-13" style="background:#fff;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(255,131,83,0.09) 0%,transparent 65%);z-index:0;"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,131,83,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,131,83,0.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;"></div>
+    <div class="slide-content" style="text-align:center;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+      <div class="tag s-anim" style="margin:0 auto 24px;">Conclusão</div>
+      <div class="s-anim" style="font-size:clamp(28px,4vw,50px);font-weight:900;color:var(--dark);letter-spacing:-2px;line-height:1.1;max-width:820px;margin-bottom:18px;">
+        O início certo, no<br>investimento certo,<br>para <span style="color:var(--orange);">evoluir na hora certa.</span>
+      </div>
+      <p class="subtitle s-anim" style="text-align:center;margin:0 auto 30px;max-width:580px;">
+        Esta proposta representa uma <strong>versão inicial e funcional do sistema</strong>, focada em resolver os principais desafios operacionais da assistência técnica. No futuro, o sistema pode evoluir para todas as funcionalidades do projeto completo.
+      </p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;" class="s-anim">
+        <div class="pillar" style="min-width:150px;">
+          <div class="pi">⚡</div>
+          <div class="pt">Entrega em semanas</div>
+          <div class="pd">Sistema funcional em 5 a 7 semanas</div>
+        </div>
+        <div class="pillar" style="min-width:150px;">
+          <div class="pi">💰</div>
+          <div class="pt">R$20.000</div>
+          <div class="pd">90% mais acessível que o projeto completo</div>
+        </div>
+        <div class="pillar" style="min-width:150px;">
+          <div class="pi">📈</div>
+          <div class="pt">Base evolutiva</div>
+          <div class="pd">Código preparado para crescer com o negócio</div>
+        </div>
+        <div class="pillar" style="min-width:150px;">
+          <div class="pi">🏆</div>
+          <div class="pt">Produto próprio</div>
+          <div class="pd">IP do sistema pertence ao cliente, sem licenças</div>
+        </div>
+      </div>
+      <div style="margin-top:32px;font-size:15px;font-weight:600;color:#aaa;" class="s-anim">
+        Desenvolvido por <strong style="color:var(--orange);">MindCorpWeb</strong> · Web e Sistemas
+      </div>
+    </div>
+  </div>
+
+</div><!-- /slides-wrapper -->
+
+<script>
+  const TOTAL = 14;
+  let current = 0, isAnimating = false;
+
+  const dotsEl = document.getElementById('nav-dots');
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  }
+
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  document.getElementById('tot-slides').textContent = TOTAL;
+  const curEl = document.getElementById('cur-slide');
+
+  function activate(idx) {
+    slides[idx].classList.add('active');
+    slides[idx].classList.remove('exit-left','exit-right');
+  }
+
+  function goTo(idx) {
+    if (isAnimating || idx === current || idx < 0 || idx >= TOTAL) return;
+    isAnimating = true;
+    const prev = current;
+    const dir  = idx > prev ? 'left' : 'right';
+
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add(dir === 'left' ? 'exit-left' : 'exit-right');
+
+    slides[idx].style.transform = dir === 'left' ? 'translateX(60px)' : 'translateX(-60px)';
+    slides[idx].style.opacity = '0';
+    slides[idx].classList.remove('exit-left','exit-right','active');
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      slides[idx].style.transform = '';
+      slides[idx].style.opacity = '';
+      activate(idx);
+    }));
+
+    current = idx;
+    curEl.textContent = idx + 1;
+    document.querySelectorAll('.nav-dot').forEach((d,i) => d.classList.toggle('active', i === idx));
+    setTimeout(() => { isAnimating = false; }, 600);
+  }
+
+  function changeSlide(dir) { goTo(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); changeSlide(-1); }
+  });
+
+  let wheelTimer = null;
+  document.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (wheelTimer) return;
+    wheelTimer = setTimeout(() => { wheelTimer = null; }, 700);
+    changeSlide(e.deltaY > 0 ? 1 : -1);
+  }, { passive:false });
+
+  let tx = 0, ty = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  activate(0);
+</script>
+</body>
+</html>
