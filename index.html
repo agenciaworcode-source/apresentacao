@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP SaaS para Assistências Técnicas — MindCorpWeb</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #ff8353;
+    --orange-light: #ffb08a;
+    --orange-dark: #e5603a;
+    --orange-glow: rgba(255,131,83,0.18);
+    --orange-glow-strong: rgba(255,131,83,0.32);
+    --white: #ffffff;
+    --gray-50: #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #ebebeb;
+    --gray-400: #aaa;
+    --gray-600: #666;
+    --gray-800: #333;
+    --dark: #111;
+    --font: 'Inter', sans-serif;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: var(--font);
+    background: #fff;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar-wrap {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: transparent;
+    z-index: 2000;
+  }
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), var(--orange-light));
+    width: 0%;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 8px rgba(255,131,83,0.5);
+  }
+
+  /* ── ROI CALCULATOR SLIDE ── */
+  .roi-slide { background: #fff; }
+  .roi-wrap { width: 100%; max-width: 1100px; }
+  .roi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  .roi-inputs { display: flex; flex-direction: column; gap: 16px; }
+  .roi-field { display: flex; flex-direction: column; gap: 6px; }
+  .roi-field label { font-size: 13px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: 1px; }
+  .roi-field input, .roi-field select {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--dark);
+    outline: none;
+    transition: border-color 0.2s;
+    background: white;
+  }
+  .roi-field input:focus, .roi-field select:focus { border-color: var(--orange); }
+  .roi-field .field-hint { font-size: 12px; color: var(--gray-400); }
+  .roi-results { display: flex; flex-direction: column; gap: 14px; }
+  .roi-result-card {
+    background: white;
+    border: 2px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 20px 24px;
+    transition: all 0.3s;
+  }
+  .roi-result-card.primary {
+    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+    border-color: transparent;
+    color: white;
+  }
+  .roi-result-card .res-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gray-400); margin-bottom: 6px; }
+  .roi-result-card.primary .res-label { color: rgba(255,255,255,0.75); }
+  .roi-result-card .res-val { font-size: clamp(22px, 2.5vw, 36px); font-weight: 900; color: var(--dark); letter-spacing: -1px; line-height: 1; }
+  .roi-result-card.primary .res-val { color: white; }
+  .roi-result-card .res-sub { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+  .roi-result-card.primary .res-sub { color: rgba(255,255,255,0.7); }
+  .roi-slider-wrap { margin-top: 4px; }
+  .roi-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--gray-200);
+    outline: none;
+    margin-top: 8px;
+  }
+  .roi-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--orange);
+    cursor: pointer;
+    box-shadow: 0 0 0 4px rgba(255,131,83,0.2);
+  }
+  .roi-val-display { font-size: 22px; font-weight: 800; color: var(--orange); margin-top: 4px; }
+  .roi-note { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+
+  /* ── LOGO ── */
+  .logo-fixed {
+    position: fixed;
+    top: 28px; left: 36px;
+    z-index: 1000;
+    height: 36px;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .logo-fixed img { height: 100%; width: auto; display: block; }
+
+  /* ── SLIDE COUNTER ── */
+  .slide-counter {
+    position: fixed;
+    bottom: 24px; right: 36px;
+    z-index: 1000;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-400);
+    letter-spacing: 1px;
+  }
+
+  /* ── NAV DOTS ── */
+  .nav-dots {
+    position: fixed;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .nav-dot.active {
+    background: var(--orange);
+    width: 20px;
+    border-radius: 3px;
+  }
+
+  /* ── NAV ARROWS ── */
+  .nav-arrow {
+    position: fixed;
+    top: 50%; transform: translateY(-50%);
+    z-index: 1000;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--gray-200);
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--gray-600);
+  }
+  .nav-arrow:hover { border-color: var(--orange); color: var(--orange); background: white; }
+  .nav-arrow.prev { left: 16px; }
+  .nav-arrow.next { right: 16px; }
+  .nav-arrow svg { width: 18px; height: 18px; }
+
+  /* ── SLIDES WRAPPER ── */
+  #slides-wrapper {
+    width: 100%; height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── SLIDE BASE ── */
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 100px 60px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: none;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+    transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1),
+                transform 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+  .slide.exit-left {
+    opacity: 0;
+    transform: translateX(-60px);
+    pointer-events: none;
+    transition: opacity 0.45s cubic-bezier(0.4,0,0.2,1),
+                transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+  .slide.exit-right {
+    opacity: 0;
+    transform: translateX(60px);
+    pointer-events: none;
+    transition: opacity 0.45s cubic-bezier(0.4,0,0.2,1),
+                transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* stagger children */
+  .slide.active .s-anim { animation: slideUp 0.55s cubic-bezier(0.4,0,0.2,1) both; }
+  .slide.active .s-anim:nth-child(1) { animation-delay: 0.08s; }
+  .slide.active .s-anim:nth-child(2) { animation-delay: 0.16s; }
+  .slide.active .s-anim:nth-child(3) { animation-delay: 0.24s; }
+  .slide.active .s-anim:nth-child(4) { animation-delay: 0.32s; }
+  .slide.active .s-anim:nth-child(5) { animation-delay: 0.40s; }
+  .slide.active .s-anim:nth-child(6) { animation-delay: 0.48s; }
+  .slide.active .s-anim:nth-child(7) { animation-delay: 0.56s; }
+  .slide.active .s-anim:nth-child(8) { animation-delay: 0.64s; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── BACKGROUND GLOW ── */
+  .bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-tl { width: 500px; height: 500px; top: -200px; left: -150px; background: var(--orange-glow); }
+  .glow-br { width: 400px; height: 400px; bottom: -150px; right: -100px; background: var(--orange-glow); }
+  .glow-center { width: 600px; height: 400px; top: 50%; left: 50%; transform: translate(-50%,-50%); background: var(--orange-glow); opacity: 0.5; }
+
+  .slide-content { position: relative; z-index: 1; width: 100%; max-width: 1200px; }
+
+  /* ── TYPOGRAPHY ── */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,131,83,0.1);
+    border: 1px solid rgba(255,131,83,0.25);
+    color: var(--orange);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+  .tag::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); }
+
+  h1.hero-title {
+    font-size: clamp(46px, 5.5vw, 78px);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--dark);
+    letter-spacing: -2px;
+  }
+  h1.hero-title span { color: var(--orange); }
+
+  h2.slide-title {
+    font-size: clamp(32px, 4vw, 54px);
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  h2.slide-title span { color: var(--orange); }
+
+  h3.section-title {
+    font-size: clamp(20px, 2.2vw, 30px);
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: clamp(16px, 1.8vw, 22px);
+    color: var(--gray-600);
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 640px;
+  }
+  .subtitle strong { color: var(--dark); font-weight: 600; }
+
+  .divider {
+    width: 48px; height: 4px;
+    background: var(--orange);
+    border-radius: 2px;
+    margin: 18px 0;
+  }
+
+  /* ── CARDS ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .card {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--orange-light));
+    border-radius: 16px 16px 0 0;
+  }
+  .card:hover { box-shadow: 0 8px 32px rgba(255,131,83,0.15); border-color: var(--orange-light); transform: translateY(-2px); }
+  .card .card-icon { font-size: 28px; margin-bottom: 12px; }
+  .card .card-title { font-size: 17px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+  .card .card-desc { font-size: 15px; color: var(--gray-600); line-height: 1.6; }
+
+  /* ── PROBLEM LIST ── */
+  .problem-list { list-style: none; display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
+  .problem-list li {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .problem-list li .icon {
+    width: 36px; height: 36px; min-width: 36px;
+    background: rgba(255,131,83,0.1);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .problem-list li .text strong { font-size: 18px; font-weight: 700; color: var(--dark); display: block; margin-bottom: 3px; }
+  .problem-list li .text span { font-size: 16px; color: var(--gray-600); }
+
+  /* ── STAT BOXES ── */
+  .stats-row { display: flex; gap: 20px; margin-top: 24px; flex-wrap: wrap; }
+  .stat-box {
+    flex: 1; min-width: 160px;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .stat-box .stat-num {
+    font-size: clamp(32px, 3.4vw, 48px);
+    font-weight: 800;
+    color: var(--orange);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .stat-box .stat-label { font-size: 14px; color: var(--gray-600); margin-top: 6px; font-weight: 500; }
+
+  /* ── TWO COLUMNS ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 20px; }
+  .two-col-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight-box {
+    background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+    border-radius: 20px;
+    padding: 32px 36px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .highlight-box::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .highlight-box .big-num {
+    font-size: clamp(48px, 6vw, 80px);
+    font-weight: 900;
+    letter-spacing: -3px;
+    line-height: 1;
+    color: white;
+  }
+  .highlight-box .big-label { font-size: 20px; font-weight: 500; opacity: 0.9; margin-top: 6px; }
+  .highlight-box p { font-size: 16px; opacity: 0.8; margin-top: 8px; line-height: 1.6; }
+
+  /* ── TIMELINE / ROADMAP ── */
+  .roadmap { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+  .roadmap-item {
+    display: flex; align-items: center; gap: 16px;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 14px 20px;
+  }
+  .roadmap-item .phase-badge {
+    min-width: 80px;
+    text-align: center;
+    background: rgba(255,131,83,0.1);
+    color: var(--orange);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 100px;
+  }
+  .roadmap-item .phase-title { font-size: 17px; font-weight: 700; color: var(--dark); }
+  .roadmap-item .phase-desc { font-size: 15px; color: var(--gray-600); }
+  .roadmap-bar-wrap { flex: 1; }
+  .roadmap-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--orange), var(--orange-light));
+    position: relative;
+  }
+  .roadmap-bar::after {
+    content: attr(data-label);
+    position: absolute; right: 0; top: -18px;
+    font-size: 10px; color: var(--gray-400); font-weight: 600;
+  }
+
+  /* ── PRICE TABLE ── */
+  .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 20px; }
+  .price-card {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 14px;
+    padding: 18px 16px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .price-card:hover { border-color: var(--orange); box-shadow: 0 4px 20px rgba(255,131,83,0.12); }
+  .price-card.featured {
+    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+    border-color: transparent;
+    color: white;
+  }
+  .price-card .mod-name { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .price-card.featured .mod-name { color: rgba(255,255,255,0.9); }
+  .price-card .mod-price { font-size: 26px; font-weight: 800; color: var(--orange); letter-spacing: -0.5px; }
+  .price-card.featured .mod-price { color: white; }
+  .price-card .mod-sub { font-size: 14px; color: var(--gray-400); margin-top: 4px; }
+  .price-card.featured .mod-sub { color: rgba(255,255,255,0.7); }
+
+  /* ── COMPARISON TABLE ── */
+  .comp-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 16px; }
+  .comp-table th { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-400); font-weight: 700; padding: 0 16px 8px; text-align: left; }
+  .comp-table th:last-child { text-align: right; }
+  .comp-table td { padding: 14px 16px; background: white; font-size: 15px; color: var(--gray-800); }
+  .comp-table td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; }
+  .comp-table td:last-child { border-radius: 0 10px 10px 0; text-align: right; font-weight: 700; }
+  .comp-table tr.highlight td { background: rgba(255,131,83,0.06); border: 1.5px solid rgba(255,131,83,0.2); }
+  .comp-table tr.highlight td:last-child { color: var(--orange); }
+
+  /* ── SAAS PROJECTION ── */
+  .proj-row { display: flex; gap: 16px; margin-top: 24px; align-items: flex-end; }
+  .proj-col {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s;
+  }
+  .proj-col:hover { box-shadow: 0 8px 32px rgba(255,131,83,0.12); }
+  .proj-col.featured { border-color: var(--orange); box-shadow: 0 8px 40px rgba(255,131,83,0.2); }
+  .proj-col .proj-clients { font-size: 13px; color: var(--gray-400); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .proj-col .proj-revenue { font-size: clamp(26px, 2.8vw, 40px); font-weight: 800; color: var(--orange); letter-spacing: -1px; margin: 8px 0; }
+  .proj-col .proj-monthly { font-size: 13px; color: var(--gray-600); }
+  .proj-bar-container { width: 100%; background: var(--gray-100); border-radius: 6px; height: 120px; margin: 12px 0; display: flex; align-items: flex-end; overflow: hidden; }
+  .proj-bar { width: 100%; background: linear-gradient(0deg, var(--orange), var(--orange-light)); border-radius: 4px; transition: height 1s ease; }
+  .proj-badge {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--orange); color: white;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 3px 10px; border-radius: 100px;
+  }
+
+  /* ── MODULE LIST ── */
+  .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+  .module-item {
+    display: flex; align-items: center; gap: 12px;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: all 0.25s;
+  }
+  .module-item:hover { border-color: var(--orange); background: rgba(255,131,83,0.03); }
+  .module-item .mod-icon {
+    width: 40px; height: 40px; min-width: 40px;
+    background: rgba(255,131,83,0.1);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .module-item .mod-info strong { font-size: 16px; font-weight: 700; color: var(--dark); display: block; }
+  .module-item .mod-info span { font-size: 14px; color: var(--gray-400); }
+
+  /* ── FEATURE LIST ── */
+  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .feature-list li {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 16px; color: var(--gray-800);
+  }
+  .feature-list li::before {
+    content: '';
+    width: 20px; height: 20px; min-width: 20px;
+    background: rgba(255,131,83,0.12);
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff8353' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size: 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* ── MARKETPLACE LOGOS ── */
+  .marketplace-row { display: flex; gap: 20px; margin-top: 24px; flex-wrap: wrap; }
+  .marketplace-card {
+    flex: 1; min-width: 180px;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .marketplace-card:hover { border-color: var(--orange); box-shadow: 0 4px 24px rgba(255,131,83,0.12); }
+  .marketplace-card.future { opacity: 0.55; }
+  .marketplace-card .mp-logo { font-size: 26px; margin-bottom: 8px; }
+  .marketplace-card .mp-name { font-size: 17px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .marketplace-card .mp-badge { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; border-radius: 100px; }
+  .mp-badge.active { background: rgba(34,197,94,0.1); color: #16a34a; }
+  .mp-badge.future { background: var(--gray-100); color: var(--gray-400); }
+
+  /* ── CONCLUSION ── */
+  .conclusion-wrap { text-align: center; }
+  .conclusion-wrap .big-text {
+    font-size: clamp(38px, 4.6vw, 64px);
+    font-weight: 900;
+    color: var(--dark);
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .conclusion-wrap .big-text span { color: var(--orange); }
+
+  /* ── COVER SLIDE ── */
+  .cover-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(255,131,83,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 80% at 10% 80%, rgba(255,131,83,0.06) 0%, transparent 60%);
+    z-index: 0;
+  }
+  .cover-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image: linear-gradient(rgba(255,131,83,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,131,83,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .cover-content { position: relative; z-index: 1; max-width: 900px; }
+  .cover-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,131,83,0.1);
+    border: 1px solid rgba(255,131,83,0.3);
+    color: var(--orange);
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 8px 20px; border-radius: 100px;
+    margin-bottom: 28px;
+  }
+  .cover-title {
+    font-size: clamp(42px, 6vw, 82px);
+    font-weight: 900;
+    color: var(--dark);
+    letter-spacing: -3px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  .cover-title span { color: var(--orange); }
+  .cover-subtitle {
+    font-size: clamp(17px, 2vw, 24px);
+    color: var(--gray-600);
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 580px;
+    margin-bottom: 36px;
+  }
+  .cover-meta {
+    display: flex; align-items: center; gap: 20px;
+    font-size: 15px; color: var(--gray-400);
+  }
+  .cover-meta .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gray-200); }
+  .cover-year { font-weight: 700; color: var(--orange); }
+  .cover-right {
+    position: absolute;
+    right: -40px; top: 50%; transform: translateY(-50%);
+    z-index: 1;
+  }
+  .orbit {
+    width: 380px; height: 380px;
+    border: 1px solid rgba(255,131,83,0.12);
+    border-radius: 50%;
+    position: relative;
+    animation: spin 20s linear infinite;
+  }
+  .orbit::before {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    background: var(--orange);
+    border-radius: 50%;
+    top: -6px; left: 50%; transform: translateX(-50%);
+    box-shadow: 0 0 20px var(--orange);
+  }
+  .orbit-inner {
+    width: 260px; height: 260px;
+    border: 1px solid rgba(255,131,83,0.08);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    animation: spin-r 15s linear infinite;
+  }
+  .orbit-inner::before {
+    content: '';
+    position: absolute;
+    width: 8px; height: 8px;
+    background: var(--orange-light);
+    border-radius: 50%;
+    bottom: -4px; left: 50%; transform: translateX(-50%);
+    box-shadow: 0 0 14px var(--orange-light);
+  }
+  .orbit-core {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,131,83,0.15), rgba(255,131,83,0.05));
+    border: 1px solid rgba(255,131,83,0.2);
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px;
+    backdrop-filter: blur(8px);
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes spin-r { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(-360deg); } }
+
+  /* ── SLIDE DARK VARIANT ── */
+  .slide.dark-slide { background: #0f0f0f; }
+  .slide.dark-slide .slide-title, .slide.dark-slide h2 { color: white; }
+  .slide.dark-slide .subtitle { color: rgba(255,255,255,0.6); }
+
+  /* ── TOTAL INVESTMENT ── */
+  .total-invest-wrap {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%;
+  }
+  .total-box {
+    text-align: center;
+    position: relative; z-index: 1;
+  }
+  .total-label { font-size: 15px; text-transform: uppercase; letter-spacing: 3px; color: var(--gray-400); font-weight: 700; margin-bottom: 16px; }
+  .total-value {
+    font-size: clamp(56px, 9vw, 110px);
+    font-weight: 900;
+    color: var(--dark);
+    letter-spacing: -4px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .total-value span { color: var(--orange); }
+  .total-note { font-size: 16px; color: var(--gray-400); margin-top: 16px; max-width: 480px; text-align: center; margin-left: auto; margin-right: auto; line-height: 1.6; }
+  .total-breakdown { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+  .total-chip {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 100px;
+    padding: 7px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-600);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .total-chip .chip-price { color: var(--orange); font-weight: 700; }
+
+  /* ── CHECKLIST ── */
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+  .check-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .check-item .check-icon {
+    width: 28px; height: 28px; min-width: 28px;
+    background: rgba(255,131,83,0.1);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .check-item strong { font-size: 17px; font-weight: 700; color: var(--dark); display: block; margin-bottom: 3px; }
+  .check-item span { font-size: 15px; color: var(--gray-500); }
+
+  /* pill */
+  .pill { display: inline-flex; align-items: center; gap: 4px; background: var(--gray-100); color: var(--gray-600); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 100px; }
+  .pill.orange { background: rgba(255,131,83,0.1); color: var(--orange); }
+
+  /* timeline horizontal */
+  .timeline-h { display: flex; align-items: flex-start; gap: 0; margin-top: 32px; position: relative; }
+  .timeline-h::before {
+    content: '';
+    position: absolute; top: 22px; left: 0; right: 0;
+    height: 2px; background: var(--gray-200); z-index: 0;
+  }
+  .tl-step { flex: 1; text-align: center; position: relative; z-index: 1; padding: 0 8px; }
+  .tl-dot {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 18px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .tl-step.done .tl-dot { border-color: var(--orange); background: rgba(255,131,83,0.1); }
+  .tl-step.active-step .tl-dot { border-color: var(--orange); background: var(--orange); box-shadow: 0 0 0 6px rgba(255,131,83,0.15); }
+  .tl-label { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .tl-sub { font-size: 13px; color: var(--gray-400); line-height: 1.4; }
+  .tl-time {
+    font-size: 13px; font-weight: 700; color: var(--orange);
+    background: rgba(255,131,83,0.08); border-radius: 100px;
+    padding: 2px 8px; margin-top: 6px; display: inline-block;
+  }
+
+  /* ── DASHBOARD MOCKUP ── */
+  .dash-mockup {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  }
+  .dash-header { background: var(--gray-50); border-bottom: 1px solid var(--gray-200); padding: 12px 20px; display: flex; align-items: center; gap: 8px; }
+  .dash-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dash-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+  .dash-kpi { background: var(--gray-50); border-radius: 10px; padding: 14px; }
+  .dash-kpi .kpi-val { font-size: 22px; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; }
+  .dash-kpi .kpi-val span { color: var(--orange); }
+  .dash-kpi .kpi-name { font-size: 11px; color: var(--gray-400); font-weight: 600; margin-top: 4px; }
+  .dash-chart { grid-column: span 2; background: var(--gray-50); border-radius: 10px; padding: 14px; height: 100px; }
+  .dash-chart-title { font-size: 11px; font-weight: 700; color: var(--gray-600); margin-bottom: 8px; }
+  .bars-mini { display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+  .bar-mini { flex: 1; background: var(--orange); border-radius: 3px 3px 0 0; opacity: 0.7; transition: opacity 0.3s; }
+  .bar-mini:hover { opacity: 1; }
+
+  /* ── VISION SLIDE ── */
+  .vision-center { text-align: center; }
+  .vision-big {
+    font-size: clamp(24px, 3.1vw, 42px);
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -1px;
+    line-height: 1.2;
+    max-width: 800px;
+    margin: 0 auto 24px;
+  }
+  .vision-big span { color: var(--orange); }
+  .pillars { display: flex; gap: 16px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+  .pillar {
+    flex: 1; min-width: 160px; max-width: 220px;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 24px 16px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .pillar:hover { border-color: var(--orange); box-shadow: 0 4px 24px rgba(255,131,83,0.12); transform: translateY(-3px); }
+  .pillar .pillar-icon { font-size: 32px; margin-bottom: 10px; }
+  .pillar .pillar-title { font-size: 17px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+  .pillar .pillar-desc { font-size: 15px; color: var(--gray-600); line-height: 1.6; }
+
+  /* ── MULTITENANCY ── */
+  .arch-box {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+  .arch-layers { display: flex; flex-direction: column; gap: 8px; }
+  .arch-layer {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .arch-layer.l1 { background: linear-gradient(90deg, var(--orange), var(--orange-light)); color: white; }
+  .arch-layer.l2 { background: rgba(255,131,83,0.1); color: var(--orange-dark); border: 1px solid rgba(255,131,83,0.2); }
+  .arch-layer.l3 { background: var(--gray-50); color: var(--gray-600); border: 1px dashed var(--gray-200); }
+  .tenant-row { display: flex; gap: 8px; margin-top: 8px; }
+  .tenant-box {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    text-align: center;
+    font-size: 15px; font-weight: 600; color: var(--gray-600);
+  }
+
+  /* ── ORDER FLOW ── */
+  .os-flow { display: flex; align-items: center; gap: 0; margin-top: 24px; }
+  .os-step {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .os-step:hover { border-color: var(--orange); }
+  .os-step .os-icon { font-size: 24px; margin-bottom: 6px; }
+  .os-step .os-name { font-size: 14px; font-weight: 700; color: var(--dark); }
+  .os-arrow { font-size: 16px; color: var(--gray-200); margin: 0 6px; flex-shrink: 0; }
+
+  /* ── STOCK MODULE ── */
+  .stock-features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+
+<!-- LOGO FIXED -->
+<div class="logo-fixed" id="logo-wrap">
+  <img src="assets/Group 7.png" alt="MindCorpWeb" id="logo-img">
+</div>
+
+<!-- SLIDE COUNTER -->
+<div class="slide-counter"><span id="cur-slide">1</span> / <span id="tot-slides">20</span></div>
+
+<!-- NAV DOTS -->
+<div class="nav-dots" id="nav-dots"></div>
+
+<!-- NAV ARROWS -->
+<button class="nav-arrow prev" onclick="changeSlide(-1)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<button class="nav-arrow next" onclick="changeSlide(1)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
+
+<!-- SLIDES -->
+<div id="slides-wrapper">
+
+  <!-- ── SLIDE 1: CAPA ── -->
+  <div class="slide" id="slide-0" style="background:#fff;">
+    <div class="cover-bg"></div>
+    <div class="cover-grid"></div>
+    <div class="slide-content" style="display:flex;align-items:center;gap:60px;justify-content:space-between;">
+      <div class="cover-content s-anim">
+        <div class="s-anim cover-badge">
+          ✦ MindCorpWeb · 2025
+        </div>
+        <h1 class="cover-title s-anim">ERP <span>SaaS</span><br>para Assistências<br>Técnicas</h1>
+        <p class="cover-subtitle s-anim">Plataforma completa de gestão e vendas — do atendimento ao marketplace, em uma única solução escalável.</p>
+        <div class="cover-meta s-anim">
+          <span>Proposta Técnica</span>
+          <span class="dot"></span>
+          <span>Software SaaS B2B</span>
+          <span class="dot"></span>
+          <span class="cover-year">2025</span>
+        </div>
+      </div>
+      <div style="position:relative;flex-shrink:0;" class="s-anim">
+        <div class="orbit">
+          <div class="orbit-inner"></div>
+          <div class="orbit-core">🔧</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 2: CONTEXTO ── -->
+  <div class="slide" id="slide-1" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Contexto de mercado</div>
+      <h2 class="slide-title s-anim">O mercado de <span>assistências técnicas</span> é enorme e fragmentado</h2>
+      <div class="divider s-anim"></div>
+      <div class="stats-row s-anim">
+        <div class="stat-box">
+          <div class="stat-num">500K+</div>
+          <div class="stat-label">Assistências técnicas ativas no Brasil</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">R$80bi</div>
+          <div class="stat-label">Mercado de reparos e manutenção</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">72%</div>
+          <div class="stat-label">Usam planilhas ou sistemas desatualizados</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">3x</div>
+          <div class="stat-label">Crescimento do setor desde 2020</div>
+        </div>
+      </div>
+      <p class="subtitle s-anim" style="margin-top:24px;">A maioria dos negócios ainda opera de forma <strong>manual, descentralizada e sem visibilidade</strong>. Há uma clara oportunidade para digitalização vertical.</p>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 3: PROBLEMAS ── -->
+  <div class="slide" id="slide-2" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Diagnóstico</div>
+      <h2 class="slide-title s-anim">Problemas que <span>travam</span> as assistências hoje</h2>
+      <div class="divider s-anim"></div>
+      <ul class="problem-list s-anim">
+        <li>
+          <div class="icon">📋</div>
+          <div class="text"><strong>Ordens de serviço no papel ou em planilhas</strong><span>Sem rastreabilidade, histórico ou automação de status</span></div>
+        </li>
+        <li>
+          <div class="icon">📦</div>
+          <div class="text"><strong>Estoque de peças descontrolado</strong><span>Perdas por extravios, compras duplicadas e falta de reposição automática</span></div>
+        </li>
+        <li>
+          <div class="icon">🛒</div>
+          <div class="text"><strong>Vendas dispersas em múltiplos canais</strong><span>Mercado Livre, WhatsApp e loja física sem integração — estoque quebra</span></div>
+        </li>
+        <li>
+          <div class="icon">📊</div>
+          <div class="text"><strong>Gestão financeira e fiscal manual</strong><span>NF-e emitida em sistemas separados, DRE feito no Excel, sem visão em tempo real</span></div>
+        </li>
+        <li>
+          <div class="icon">💬</div>
+          <div class="text"><strong>Comunicação com o cliente sem padrão</strong><span>Atualizações por WhatsApp informal, sem histórico e sem automação</span></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 4: OPORTUNIDADE ── -->
+  <div class="slide" id="slide-3" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Oportunidade</div>
+      <h2 class="slide-title s-anim">Uma janela de oportunidade <span>clara e urgente</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="two-col s-anim" style="margin-top:24px;">
+        <div>
+          <div class="highlight-box" style="height:100%;">
+            <div class="big-num">+500k</div>
+            <div class="big-label">negócios sem solução vertical</div>
+            <p>Nenhum SaaS brasileiro atende o segmento de assistências técnicas com profundidade — estoque + OS + PDV + marketplace em uma plataforma.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card">
+            <div class="card-icon">🎯</div>
+            <div class="card-title">Nicho sub-atendido</div>
+            <div class="card-desc">Soluções genéricas como Bling e Tiny não atendem fluxos específicos de conserto e laudo técnico.</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">📈</div>
+            <div class="card-title">SaaS recorrente de alto LTV</div>
+            <div class="card-desc">Uma vez implantado, o sistema vira infraestrutura crítica. Churn tende a ser muito baixo.</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🔗</div>
+            <div class="card-title">Efeito de rede nos marketplaces</div>
+            <div class="card-desc">A integração nativa com ML e Shopee é um diferencial que gera dependência e valor crescente.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 5: VISÃO ── -->
+  <div class="slide" id="slide-4" style="background:#fff;">
+    <div class="bg-glow glow-center"></div>
+    <div class="slide-content" style="text-align:center;">
+      <div class="tag s-anim" style="margin:0 auto 20px;">Visão do produto</div>
+      <div class="vision-big s-anim">
+        Uma única plataforma que <span>unifica toda a operação</span> de uma assistência técnica — do atendimento à venda.
+      </div>
+      <p class="subtitle s-anim" style="margin:0 auto 32px;text-align:center;">Do primeiro contato do cliente até a emissão da NF-e e envio pelo marketplace, tudo acontece dentro do mesmo sistema.</p>
+      <div class="pillars s-anim">
+        <div class="pillar">
+          <div class="pillar-icon">🔧</div>
+          <div class="pillar-title">Gestão de OS</div>
+          <div class="pillar-desc">Ciclo completo de ordens de serviço com rastreabilidade total</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">📦</div>
+          <div class="pillar-title">Estoque Inteligente</div>
+          <div class="pillar-desc">Peças, reposição automática e custo médio em tempo real</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">🛍️</div>
+          <div class="pillar-title">Hub de Vendas</div>
+          <div class="pillar-desc">PDV físico + marketplaces integrados com um único estoque</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">📊</div>
+          <div class="pillar-title">Analytics</div>
+          <div class="pillar-desc">Dashboard gerencial com indicadores de desempenho em tempo real</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">🧾</div>
+          <div class="pillar-title">Fiscal Integrado</div>
+          <div class="pillar-desc">NF-e, NFS-e e obrigações fiscais sem sair do sistema</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 6: SAAS MULTIEMPRESA ── -->
+  <div class="slide" id="slide-5" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Arquitetura</div>
+      <h2 class="slide-title s-anim">Plataforma <span>SaaS multiempresa</span> com isolamento total</h2>
+      <div class="divider s-anim"></div>
+      <div class="two-col s-anim">
+        <div>
+          <div class="arch-box">
+            <div class="arch-layers">
+              <div class="arch-layer l1">☁️ Infraestrutura Cloud Escalável</div>
+              <div class="arch-layer l2">🏢 Plataforma MindCorp ERP</div>
+              <div class="arch-layer l3">API Multi-tenant · Auth · Billing · Permissões</div>
+            </div>
+            <div class="tenant-row" style="margin-top:16px;">
+              <div class="tenant-box">🔧 Empresa A</div>
+              <div class="tenant-box">📱 Empresa B</div>
+              <div class="tenant-box">🖥️ Empresa C</div>
+              <div class="tenant-box">+ N...</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="check-item">
+            <div class="check-icon">🔒</div>
+            <div><strong>Dados isolados por tenant</strong><span>Cada empresa enxerga apenas seus próprios dados</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">📋</div>
+            <div><strong>Permissões por perfil</strong><span>Admin, técnico, vendedor, financeiro — controle granular</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">💳</div>
+            <div><strong>Cobrança recorrente automatizada</strong><span>Planos mensais com upgrade/downgrade sem intervenção</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">⚡</div>
+            <div><strong>Deploy contínuo sem downtime</strong><span>Atualizações entregues para todos os clientes simultaneamente</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">📈</div>
+            <div><strong>Escalável horizontalmente</strong><span>De 10 a 10.000 clientes sem reescrita de código</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 7: DIFERENCIAIS ── -->
+  <div class="slide" id="slide-6" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Por que escolher</div>
+      <h2 class="slide-title s-anim">Diferenciais que <span>nenhum concorrente</span> entrega</h2>
+      <div class="divider s-anim"></div>
+      <div class="cards-grid s-anim" style="grid-template-columns:repeat(3,1fr);">
+        <div class="card">
+          <div class="card-icon">🔧</div>
+          <div class="card-title">Vertical especializado</div>
+          <div class="card-desc">Feito para assistências técnicas — fluxos de OS, laudo, garantia e conserto nativos no core do sistema.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🛍️</div>
+          <div class="card-title">Hub de marketplaces</div>
+          <div class="card-desc">Venda no Mercado Livre e Shopee sincronizando estoque, preços e pedidos sem digitar duas vezes.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🧾</div>
+          <div class="card-title">Fiscal nativo</div>
+          <div class="card-desc">Emissão de NF-e e NFS-e direto no ERP, sem integrações pagas ou módulos externos.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📲</div>
+          <div class="card-title">Notificações automáticas</div>
+          <div class="card-desc">WhatsApp e e-mail automáticos em cada etapa da OS, mantendo o cliente informado sem trabalho manual.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📊</div>
+          <div class="card-title">Dashboard em tempo real</div>
+          <div class="card-desc">KPIs financeiros, operacionais e de vendas numa tela — sem exportar relatórios.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">☁️</div>
+          <div class="card-title">100% em nuvem</div>
+          <div class="card-desc">Acesso de qualquer dispositivo, sem instalação, backup automático e disponibilidade 99,9%.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 8: MARKETPLACES ── -->
+  <div class="slide" id="slide-7" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Hub de vendas</div>
+      <h2 class="slide-title s-anim">Integração com os maiores <span>marketplaces</span> do Brasil</h2>
+      <div class="divider s-anim"></div>
+      <p class="subtitle s-anim">Um único painel para gerenciar anúncios, pedidos, estoque e reputação em todos os canais.</p>
+      <div class="marketplace-row s-anim">
+        <div class="marketplace-card">
+          <div class="mp-logo">🛒</div>
+          <div class="mp-name">Mercado Livre</div>
+          <p style="font-size:15px;color:#666;margin:8px 0;">Sincronização de anúncios, pedidos, estoque e reputação. API oficial.</p>
+          <span class="mp-badge active">✓ Integração ativa</span>
+        </div>
+        <div class="marketplace-card">
+          <div class="mp-logo">🧧</div>
+          <div class="mp-name">Shopee</div>
+          <p style="font-size:15px;color:#666;margin:8px 0;">Listagem de produtos, gestão de pedidos e atualização de estoque em tempo real.</p>
+          <span class="mp-badge active">✓ Integração ativa</span>
+        </div>
+        <div class="marketplace-card future">
+          <div class="mp-logo">📦</div>
+          <div class="mp-name">Amazon</div>
+          <p style="font-size:15px;color:#666;margin:8px 0;">Expansão futura. Estrutura já preparada para onboarding via MWS / SP-API.</p>
+          <span class="mp-badge future">Expansão futura</span>
+        </div>
+        <div class="marketplace-card future">
+          <div class="mp-logo">🏷️</div>
+          <div class="mp-name">Outros canais</div>
+          <p style="font-size:15px;color:#666;margin:8px 0;">Roadmap inclui Magalu, OLX e integração via webhook para outros marketplaces.</p>
+          <span class="mp-badge future">Roadmap</span>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:16px 20px;background:rgba(255,131,83,0.06);border-radius:12px;border:1px solid rgba(255,131,83,0.15);" class="s-anim">
+        <strong style="font-size:16px;color:#333;">🔄 Um único estoque, múltiplos canais</strong>
+        <span style="font-size:15px;color:#666;margin-left:12px;">Quando vender pelo ML, o estoque atualiza automaticamente no Shopee e no PDV físico.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 9: MÓDULOS ── -->
+  <div class="slide" id="slide-8" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Plataforma</div>
+      <h2 class="slide-title s-anim">Principais <span>módulos</span> do sistema</h2>
+      <div class="divider s-anim"></div>
+      <div class="module-grid s-anim">
+        <div class="module-item">
+          <div class="mod-icon">🔧</div>
+          <div class="mod-info"><strong>Ordem de Serviço</strong><span>Ciclo completo de OS</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">📦</div>
+          <div class="mod-info"><strong>Estoque & Peças</strong><span>Controle de inventário</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">🛒</div>
+          <div class="mod-info"><strong>PDV</strong><span>Ponto de venda físico</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">👥</div>
+          <div class="mod-info"><strong>Clientes (CRM)</strong><span>Cadastro e histórico</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">🧾</div>
+          <div class="mod-info"><strong>Fiscal</strong><span>NF-e, NFS-e, SPED</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">🛍️</div>
+          <div class="mod-info"><strong>Marketplaces</strong><span>ML, Shopee e mais</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">💰</div>
+          <div class="mod-info"><strong>Financeiro</strong><span>DRE, fluxo de caixa</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">📊</div>
+          <div class="mod-info"><strong>Dashboard BI</strong><span>Relatórios e analytics</span></div>
+        </div>
+        <div class="module-item">
+          <div class="mod-icon">🔔</div>
+          <div class="mod-info"><strong>Notificações</strong><span>WhatsApp & e-mail auto</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 10: ORDEM DE SERVIÇO ── -->
+  <div class="slide" id="slide-9" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Módulo</div>
+      <h2 class="slide-title s-anim">Ordem de <span>Serviço</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="os-flow s-anim">
+        <div class="os-step"><div class="os-icon">📥</div><div class="os-name">Abertura</div></div>
+        <div class="os-arrow">→</div>
+        <div class="os-step"><div class="os-icon">🔍</div><div class="os-name">Diagnóstico</div></div>
+        <div class="os-arrow">→</div>
+        <div class="os-step"><div class="os-icon">💬</div><div class="os-name">Aprovação</div></div>
+        <div class="os-arrow">→</div>
+        <div class="os-step"><div class="os-icon">🔧</div><div class="os-name">Execução</div></div>
+        <div class="os-arrow">→</div>
+        <div class="os-step"><div class="os-icon">✅</div><div class="os-name">Conclusão</div></div>
+        <div class="os-arrow">→</div>
+        <div class="os-step"><div class="os-icon">🧾</div><div class="os-name">Faturamento</div></div>
+      </div>
+      <div class="two-col s-anim" style="margin-top:20px;">
+        <ul class="feature-list">
+          <li>Número de OS com QR Code para rastreio</li>
+          <li>Laudo técnico com fotos e assinatura digital</li>
+          <li>Aprovação do cliente via link ou WhatsApp</li>
+          <li>Vinculação de peças ao consumo da OS</li>
+          <li>Prazo de entrega com alertas automáticos</li>
+        </ul>
+        <ul class="feature-list">
+          <li>Histórico completo do equipamento</li>
+          <li>Status visível pelo cliente em tempo real</li>
+          <li>Relatório de produtividade por técnico</li>
+          <li>Emissão de NF-e ao fechar OS</li>
+          <li>Controle de garantia pós-serviço</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 11: ESTOQUE ── -->
+  <div class="slide" id="slide-10" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Módulo</div>
+      <h2 class="slide-title s-anim">Estoque & <span>Peças</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="two-col s-anim">
+        <div class="stock-features">
+          <div class="check-item">
+            <div class="check-icon">📦</div>
+            <div><strong>Múltiplos depósitos</strong><span>Controle por localização física ou unidade</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">🔄</div>
+            <div><strong>Reposição automática</strong><span>Alertas e pedidos quando atingir estoque mínimo</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">💰</div>
+            <div><strong>Custo médio em tempo real</strong><span>Apuração automática de margem por peça</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">🔗</div>
+            <div><strong>Vinculado à OS</strong><span>Baixa automática ao usar peça em ordem de serviço</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">📊</div>
+            <div><strong>Giro de estoque</strong><span>Relatórios de itens parados, mais vendidos e sazonalidade</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">🏷️</div>
+            <div><strong>Importação via XML NF</strong><span>Entrada de mercadoria direto da nota fiscal do fornecedor</span></div>
+          </div>
+        </div>
+        <div class="highlight-box" style="display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-size:40px;margin-bottom:12px;">📦</div>
+          <div class="big-num" style="font-size:52px;">Zero</div>
+          <div class="big-label">discrepâncias de inventário</div>
+          <p>Com a baixa automática de peças vinculada às OS e ao PDV, o estoque se atualiza em tempo real, eliminando contagens manuais.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 12: PDV ── -->
+  <div class="slide" id="slide-11" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Módulo</div>
+      <h2 class="slide-title s-anim">PDV — <span>Ponto de Venda</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="two-col s-anim">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="check-item">
+            <div class="check-icon">⚡</div>
+            <div><strong>Venda rápida com leitor de código de barras</strong><span>Interface otimizada para velocidade no balcão</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">💳</div>
+            <div><strong>Múltiplos meios de pagamento</strong><span>Dinheiro, cartão, PIX e crédito próprio</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">🧾</div>
+            <div><strong>NF-e / NFC-e automatica</strong><span>Emissão fiscal na hora da venda, sem passos extras</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">📦</div>
+            <div><strong>Estoque unificado</strong><span>Venda no PDV e o marketplace já sabe do novo saldo</span></div>
+          </div>
+          <div class="check-item">
+            <div class="check-icon">🎫</div>
+            <div><strong>Cupom de desconto e fidelidade</strong><span>Programas de pontos e desconto progressivo nativos</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="dash-mockup">
+            <div class="dash-header">
+              <div class="dash-dot" style="background:#ff5f57"></div>
+              <div class="dash-dot" style="background:#febc2e"></div>
+              <div class="dash-dot" style="background:#28c840"></div>
+              <span style="font-size:14px;color:#aaa;margin-left:8px;">PDV · Caixa 01</span>
+            </div>
+            <div style="padding:20px;">
+              <div style="background:#f5f5f5;border-radius:10px;padding:16px;margin-bottom:12px;">
+                <div style="font-size:14px;color:#aaa;font-weight:600;margin-bottom:8px;">CARRINHO</div>
+                <div style="display:flex;justify-content:space-between;font-size:15px;color:#333;margin-bottom:6px;"><span>Tela iPhone 13</span><span style="font-weight:700;color:#ff8353;">R$320,00</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:15px;color:#333;"><span>Bateria Samsung A32</span><span style="font-weight:700;color:#ff8353;">R$85,00</span></div>
+              </div>
+              <div style="background:#ff8353;border-radius:10px;padding:14px;text-align:center;color:white;">
+                <div style="font-size:14px;font-weight:700;letter-spacing:1px;margin-bottom:4px;">TOTAL</div>
+                <div style="font-size:28px;font-weight:900;letter-spacing:-1px;">R$405,00</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:12px;">
+                <div style="flex:1;background:#f5f5f5;border-radius:8px;padding:10px;text-align:center;font-size:15px;font-weight:700;color:#333;">💳 Cartão</div>
+                <div style="flex:1;background:#f5f5f5;border-radius:8px;padding:10px;text-align:center;font-size:15px;font-weight:700;color:#333;">📱 PIX</div>
+                <div style="flex:1;background:#f5f5f5;border-radius:8px;padding:10px;text-align:center;font-size:15px;font-weight:700;color:#333;">💵 Dinheiro</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 13: DASHBOARD ── -->
+  <div class="slide" id="slide-12" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Analytics</div>
+      <h2 class="slide-title s-anim">Dashboard <span>gerencial</span> em tempo real</h2>
+      <div class="divider s-anim"></div>
+      <div class="s-anim">
+        <div class="dash-mockup">
+          <div class="dash-header">
+            <div class="dash-dot" style="background:#ff5f57"></div>
+            <div class="dash-dot" style="background:#febc2e"></div>
+            <div class="dash-dot" style="background:#28c840"></div>
+            <span style="font-size:14px;color:#aaa;margin-left:8px;">Dashboard Principal · Março 2025</span>
+          </div>
+          <div class="dash-body">
+            <div class="dash-kpi"><div class="kpi-val">R$<span>48k</span></div><div class="kpi-name">Faturamento mês</div></div>
+            <div class="dash-kpi"><div class="kpi-val"><span>234</span></div><div class="kpi-name">OS abertas</div></div>
+            <div class="dash-kpi"><div class="kpi-val"><span>87%</span></div><div class="kpi-name">OS concluídas no prazo</div></div>
+            <div class="dash-kpi"><div class="kpi-val">R$<span>2,3k</span></div><div class="kpi-name">Ticket médio OS</div></div>
+            <div class="dash-chart">
+              <div class="dash-chart-title">Faturamento semanal</div>
+              <div class="bars-mini">
+                <div class="bar-mini" style="height:40%"></div>
+                <div class="bar-mini" style="height:65%"></div>
+                <div class="bar-mini" style="height:45%"></div>
+                <div class="bar-mini" style="height:80%"></div>
+                <div class="bar-mini" style="height:55%"></div>
+                <div class="bar-mini" style="height:90%"></div>
+                <div class="bar-mini" style="height:70%"></div>
+              </div>
+            </div>
+            <div class="dash-chart">
+              <div class="dash-chart-title">Vendas por canal</div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#666;">
+                  <span style="flex:1">PDV Físico</span>
+                  <div style="flex:3;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;"><div style="width:60%;height:100%;background:#ff8353;border-radius:4px;"></div></div>
+                  <span style="font-weight:700;color:#333;">60%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#666;">
+                  <span style="flex:1">Mercado Livre</span>
+                  <div style="flex:3;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;"><div style="width:30%;height:100%;background:#ffb08a;border-radius:4px;"></div></div>
+                  <span style="font-weight:700;color:#333;">30%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#666;">
+                  <span style="flex:1">Shopee</span>
+                  <div style="flex:3;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;"><div style="width:10%;height:100%;background:#ffe0cc;border-radius:4px;"></div></div>
+                  <span style="font-weight:700;color:#333;">10%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 14: ROADMAP ── -->
+  <div class="slide" id="slide-13" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Desenvolvimento</div>
+      <h2 class="slide-title s-anim">Roadmap de <span>desenvolvimento</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="roadmap s-anim">
+        <div class="roadmap-item">
+          <div style="text-align:left;min-width:180px;">
+            <div class="phase-badge">Fase 1</div>
+            <div class="phase-title" style="margin-top:4px;">Arquitetura SaaS</div>
+            <div class="phase-desc">Infraestrutura, auth, multi-tenant, billing</div>
+          </div>
+          <div class="roadmap-bar-wrap">
+            <div style="font-size:14px;color:#aaa;margin-bottom:6px;">Mês 1</div>
+            <div class="roadmap-bar" style="width:20%" data-label="1 mês"></div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div style="text-align:left;min-width:180px;">
+            <div class="phase-badge">Fase 2</div>
+            <div class="phase-title" style="margin-top:4px;">Núcleo ERP</div>
+            <div class="phase-desc">Clientes, OS, Estoque, Peças, Dashboard</div>
+          </div>
+          <div class="roadmap-bar-wrap">
+            <div style="font-size:14px;color:#aaa;margin-bottom:6px;">Mês 2–3</div>
+            <div class="roadmap-bar" style="width:45%" data-label="2 meses"></div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div style="text-align:left;min-width:180px;">
+            <div class="phase-badge">Fase 3</div>
+            <div class="phase-title" style="margin-top:4px;">PDV & Fiscal</div>
+            <div class="phase-desc">PDV completo, NF-e, NFC-e, obrigações fiscais</div>
+          </div>
+          <div class="roadmap-bar-wrap">
+            <div style="font-size:14px;color:#aaa;margin-bottom:6px;">Mês 4–5</div>
+            <div class="roadmap-bar" style="width:65%" data-label="2 meses"></div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div style="text-align:left;min-width:180px;">
+            <div class="phase-badge">Fase 4</div>
+            <div class="phase-title" style="margin-top:4px;">Integração Marketplaces</div>
+            <div class="phase-desc">ML, Shopee, relatórios avançados, BI</div>
+          </div>
+          <div class="roadmap-bar-wrap">
+            <div style="font-size:14px;color:#aaa;margin-bottom:6px;">Mês 6–7</div>
+            <div class="roadmap-bar" style="width:90%" data-label="2 meses"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 15: CRONOGRAMA ── -->
+  <div class="slide" id="slide-14" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Cronograma</div>
+      <h2 class="slide-title s-anim">De <span>5 a 7 meses</span> para o produto completo</h2>
+      <div class="divider s-anim"></div>
+      <div class="timeline-h s-anim">
+        <div class="tl-step done">
+          <div class="tl-dot">☁️</div>
+          <div class="tl-label">Infra & SaaS</div>
+          <div class="tl-sub">Auth, billing,<br>multi-tenant</div>
+          <div class="tl-time">Mês 1</div>
+        </div>
+        <div class="tl-step done">
+          <div class="tl-dot">🔧</div>
+          <div class="tl-label">OS & Clientes</div>
+          <div class="tl-sub">Fluxo completo<br>de OS e CRM</div>
+          <div class="tl-time">Mês 2</div>
+        </div>
+        <div class="tl-step done">
+          <div class="tl-dot">📦</div>
+          <div class="tl-label">Estoque & Peças</div>
+          <div class="tl-sub">Inventário,<br>reposição, custo</div>
+          <div class="tl-time">Mês 3</div>
+        </div>
+        <div class="tl-step active-step">
+          <div class="tl-dot">🛒</div>
+          <div class="tl-label">PDV & Fiscal</div>
+          <div class="tl-sub">Vendas, NF-e,<br>NFC-e</div>
+          <div class="tl-time">Mês 4–5</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot">🛍️</div>
+          <div class="tl-label">Marketplaces</div>
+          <div class="tl-sub">ML, Shopee,<br>integrações</div>
+          <div class="tl-time">Mês 6</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot">📊</div>
+          <div class="tl-label">BI & Relatórios</div>
+          <div class="tl-sub">Dashboard,<br>analytics, KPIs</div>
+          <div class="tl-time">Mês 7</div>
+        </div>
+      </div>
+      <div style="margin-top:28px;display:flex;gap:16px;" class="s-anim">
+        <div class="stat-box" style="flex:1;">
+          <div class="stat-num">2–3</div>
+          <div class="stat-label">Desenvolvedores na equipe</div>
+        </div>
+        <div class="stat-box" style="flex:1;">
+          <div class="stat-num">5–7</div>
+          <div class="stat-label">Meses até produto completo</div>
+        </div>
+        <div class="stat-box" style="flex:1;">
+          <div class="stat-num">4</div>
+          <div class="stat-label">Fases de entrega incremental</div>
+        </div>
+        <div class="stat-box" style="flex:1;">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Entregas com CI/CD automatizado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 16: INVESTIMENTO POR MÓDULO ── -->
+  <div class="slide" id="slide-15" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Investimento</div>
+      <h2 class="slide-title s-anim">Investimento <span>por módulo</span></h2>
+      <div class="divider s-anim"></div>
+      <div class="price-grid s-anim">
+        <div class="price-card">
+          <div class="mod-name">Base SaaS</div>
+          <div class="mod-price">R$50k</div>
+          <div class="mod-sub">Infra, auth, billing</div>
+        </div>
+        <div class="price-card">
+          <div class="mod-name">Clientes</div>
+          <div class="mod-price">R$10k</div>
+          <div class="mod-sub">CRM & histórico</div>
+        </div>
+        <div class="price-card">
+          <div class="mod-name">Estoque</div>
+          <div class="mod-price">R$20k</div>
+          <div class="mod-sub">Inventário & peças</div>
+        </div>
+        <div class="price-card">
+          <div class="mod-name">PDV</div>
+          <div class="mod-price">R$25k</div>
+          <div class="mod-sub">Ponto de venda</div>
+        </div>
+        <div class="price-card">
+          <div class="mod-name">Ordem de Serviço</div>
+          <div class="mod-price">R$35k</div>
+          <div class="mod-sub">Ciclo completo</div>
+        </div>
+        <div class="price-card">
+          <div class="mod-name">Peças</div>
+          <div class="mod-price">R$10k</div>
+          <div class="mod-sub">Catálogo & custos</div>
+        </div>
+        <div class="price-card">
+          <div class="mod-name">Fiscal</div>
+          <div class="mod-price">R$20k</div>
+          <div class="mod-sub">NF-e, NFS-e</div>
+        </div>
+        <div class="price-card">
+          <div class="mod-name">Marketplaces</div>
+          <div class="mod-price">R$30k</div>
+          <div class="mod-sub">ML, Shopee</div>
+        </div>
+        <div class="price-card featured">
+          <div class="mod-name">Relatórios</div>
+          <div class="mod-price">R$15k</div>
+          <div class="mod-sub">BI & Analytics</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 17: INVESTIMENTO TOTAL ── -->
+  <div class="slide" id="slide-16" style="background:#fff;">
+    <div class="bg-glow glow-center" style="opacity:0.8"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(255,131,83,0.07) 0%,transparent 70%);z-index:0;"></div>
+    <div class="slide-content" style="text-align:center;position:relative;z-index:1;">
+      <div class="tag s-anim" style="margin:0 auto 20px;">Investimento total</div>
+      <div class="total-box">
+        <div class="total-value s-anim">R$<span>200 mil</span></div>
+        <div class="total-note s-anim">Investimento único para desenvolvimento completo da plataforma, incluindo todos os módulos, infraestrutura e integrações.</div>
+        <div class="total-breakdown s-anim">
+          <div class="total-chip">Base SaaS <span class="chip-price">R$50k</span></div>
+          <div class="total-chip">OS <span class="chip-price">R$35k</span></div>
+          <div class="total-chip">PDV <span class="chip-price">R$25k</span></div>
+          <div class="total-chip">Estoque <span class="chip-price">R$20k</span></div>
+          <div class="total-chip">Fiscal <span class="chip-price">R$20k</span></div>
+          <div class="total-chip">Marketplaces <span class="chip-price">R$30k</span></div>
+          <div class="total-chip">Clientes <span class="chip-price">R$10k</span></div>
+          <div class="total-chip">Peças <span class="chip-price">R$10k</span></div>
+          <div class="total-chip">Relatórios <span class="chip-price">R$15k</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 18: COMPARAÇÃO COM TERCEIROS ── -->
+  <div class="slide" id="slide-17" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Comparação</div>
+      <h2 class="slide-title s-anim">Custo de usar <span>ferramentas de terceiros</span></h2>
+      <div class="divider s-anim"></div>
+      <p class="subtitle s-anim">Sem uma plataforma integrada, a assistência paga múltiplas assinaturas — com dados fragmentados e sem integração.</p>
+      <table class="comp-table s-anim">
+        <thead>
+          <tr>
+            <th>Ferramenta</th>
+            <th>Função</th>
+            <th>Custo mensal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Bling ERP</td><td>ERP + Estoque</td><td>R$139/mês</td></tr>
+          <tr><td>GestãoClick</td><td>Ordem de Serviço</td><td>R$179/mês</td></tr>
+          <tr><td>Bling PDV</td><td>Ponto de Venda</td><td>R$69/mês</td></tr>
+          <tr><td>Bling Marketplace</td><td>Integração ML / Shopee</td><td>R$99/mês</td></tr>
+          <tr><td>ContaAzul / Omie</td><td>Financeiro & Fiscal</td><td>R$149/mês</td></tr>
+          <tr><td>PowerBI / Metabase</td><td>Relatórios & BI</td><td>R$99/mês</td></tr>
+          <tr class="highlight"><td colspan="2"><strong>Total com ferramentas fragmentadas</strong></td><td><strong>R$734/mês</strong></td></tr>
+          <tr class="highlight" style="opacity:0.9;"><td colspan="2"><strong>MindCorp ERP (plataforma completa)</strong></td><td><strong style="color:#16a34a;">R$149/mês</strong></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:16px;padding:12px 20px;background:rgba(22,163,74,0.06);border-radius:10px;border:1px solid rgba(22,163,74,0.2);font-size:16px;color:#15803d;font-weight:600;" class="s-anim">
+        💡 Economia de até <strong>R$585/mês por cliente</strong> — argumento direto de venda.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 19: PROJEÇÃO SAAS ── -->
+  <div class="slide" id="slide-18" style="background:#fff;">
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content">
+      <div class="tag s-anim">Projeção SaaS</div>
+      <h2 class="slide-title s-anim">Receita recorrente com <span>plano de R$149/mês</span></h2>
+      <div class="divider s-anim"></div>
+      <p class="subtitle s-anim">Crescimento de receita mensal recorrente (MRR) por faixa de clientes.</p>
+      <div class="proj-row s-anim">
+        <div class="proj-col">
+          <div class="proj-clients">100 clientes</div>
+          <div class="proj-bar-container"><div class="proj-bar" style="height:33%"></div></div>
+          <div class="proj-revenue">R$14.900</div>
+          <div class="proj-monthly">por mês</div>
+          <div style="font-size:14px;color:#aaa;margin-top:6px;">R$178.800/ano</div>
+        </div>
+        <div class="proj-col">
+          <div class="proj-clients">300 clientes</div>
+          <div class="proj-bar-container"><div class="proj-bar" style="height:66%"></div></div>
+          <div class="proj-revenue">R$44.700</div>
+          <div class="proj-monthly">por mês</div>
+          <div style="font-size:14px;color:#aaa;margin-top:6px;">R$536.400/ano</div>
+        </div>
+        <div class="proj-col featured">
+          <div class="proj-badge">META</div>
+          <div class="proj-clients">500 clientes</div>
+          <div class="proj-bar-container"><div class="proj-bar" style="height:100%"></div></div>
+          <div class="proj-revenue">R$74.500</div>
+          <div class="proj-monthly">por mês</div>
+          <div style="font-size:14px;color:#aaa;margin-top:6px;">R$894.000/ano</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:14px 20px;background:rgba(255,131,83,0.06);border-radius:12px;border:1px solid rgba(255,131,83,0.15);font-size:16px;color:#666;" class="s-anim">
+        🔢 Com 500 clientes pagantes, o investimento de R$200k é <strong style="color:#ff8353;">recuperado em menos de 3 meses</strong> de MRR.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 20: CONCLUSÃO ── -->
+  <div class="slide" id="slide-19" style="background:#fff;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(255,131,83,0.1) 0%,transparent 65%);z-index:0;"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,131,83,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,131,83,0.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;"></div>
+    <div class="slide-content" style="text-align:center;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+      <div class="tag s-anim" style="margin:0 auto 24px;">Conclusão</div>
+      <div class="vision-big s-anim" style="font-size:clamp(28px,4vw,52px);max-width:860px;">
+        Não é só um sistema —<br>é um <span>ativo digital escalável</span><br>que cresce enquanto dorme.
+      </div>
+      <p class="subtitle s-anim" style="text-align:center;margin:0 auto 32px;max-width:600px;">
+        Uma vez construído, o produto serve centenas de clientes sem custo proporcional. Cada novo cliente é receita pura com margem crescente.
+      </p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;" class="s-anim">
+        <div class="pillar" style="min-width:140px;">
+          <div class="pillar-icon">🚀</div>
+          <div class="pillar-title">Produto próprio</div>
+          <div class="pillar-desc">IP pertence ao cliente, sem dependência de terceiros</div>
+        </div>
+        <div class="pillar" style="min-width:140px;">
+          <div class="pillar-icon">♾️</div>
+          <div class="pillar-title">Escala infinita</div>
+          <div class="pillar-desc">1 ou 10.000 clientes na mesma infraestrutura</div>
+        </div>
+        <div class="pillar" style="min-width:140px;">
+          <div class="pillar-icon">💰</div>
+          <div class="pillar-title">ROI rápido</div>
+          <div class="pillar-desc">Investimento recuperado em 3 meses com 500 clientes</div>
+        </div>
+        <div class="pillar" style="min-width:140px;">
+          <div class="pillar-icon">🏆</div>
+          <div class="pillar-title">Vantagem competitiva</div>
+          <div class="pillar-desc">Nicho sem concorrente vertical direto hoje</div>
+        </div>
+      </div>
+      <div style="margin-top:36px;font-size:15px;font-weight:600;color:#aaa;" class="s-anim">
+        Desenvolvido por <strong style="color:#ff8353;">MindCorpWeb</strong> · Web e Sistemas
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 21: CALCULADORA DE ROI ── -->
+  <div class="slide roi-slide" id="slide-20" style="background:#fff;">
+    <div class="bg-glow glow-tl"></div>
+    <div class="bg-glow glow-br"></div>
+    <div class="slide-content roi-wrap">
+      <div class="tag s-anim">Simulador ao vivo</div>
+      <h2 class="slide-title s-anim">Calculadora de <span>ROI</span> — personalize aqui</h2>
+      <div class="divider s-anim"></div>
+      <div class="roi-grid s-anim">
+
+        <!-- INPUTS -->
+        <div class="roi-inputs">
+          <div class="roi-field">
+            <label>Investimento total (R$)</label>
+            <input type="number" id="roi-invest" value="200000" min="50000" step="10000">
+            <span class="field-hint">Custo de desenvolvimento da plataforma</span>
+          </div>
+
+          <div class="roi-field">
+            <label>Ticket médio mensal por cliente (R$)</label>
+            <div class="roi-slider-wrap">
+              <input type="range" class="roi-slider" id="roi-ticket-range" min="49" max="499" step="10" value="149">
+              <div class="roi-val-display">R$<span id="roi-ticket-val">149</span>/mês</div>
+            </div>
+            <span class="field-hint">Plano básico R$49 · Médio R$149 · Premium R$299</span>
+          </div>
+
+          <div class="roi-field">
+            <label>Número de clientes (meta)</label>
+            <div class="roi-slider-wrap">
+              <input type="range" class="roi-slider" id="roi-clients-range" min="10" max="1000" step="10" value="300">
+              <div class="roi-val-display"><span id="roi-clients-val">300</span> clientes</div>
+            </div>
+          </div>
+
+          <div class="roi-field">
+            <label>Custo operacional mensal (R$)</label>
+            <input type="number" id="roi-cost" value="15000" min="0" step="1000">
+            <span class="field-hint">Infraestrutura, suporte, time, marketing</span>
+          </div>
+
+          <div class="roi-field">
+            <label>Churn mensal estimado (%)</label>
+            <input type="number" id="roi-churn" value="3" min="0" max="30" step="0.5">
+            <span class="field-hint">% de clientes que cancelam por mês</span>
+          </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="roi-results">
+          <div class="roi-result-card primary">
+            <div class="res-label">MRR — Receita Recorrente Mensal</div>
+            <div class="res-val" id="res-mrr">R$44.700</div>
+            <div class="res-sub" id="res-mrr-sub">300 clientes × R$149/mês</div>
+          </div>
+
+          <div class="roi-result-card">
+            <div class="res-label">Lucro líquido mensal (estimado)</div>
+            <div class="res-val" id="res-lucro">R$29.700</div>
+            <div class="res-sub">MRR − custos operacionais</div>
+          </div>
+
+          <div class="roi-result-card">
+            <div class="res-label">Payback — meses para recuperar o investimento</div>
+            <div class="res-val" id="res-payback">6,7 meses</div>
+            <div class="res-sub">Investimento ÷ lucro líquido mensal</div>
+          </div>
+
+          <div class="roi-result-card">
+            <div class="res-label">ARR — Receita Anual Recorrente</div>
+            <div class="res-val" id="res-arr">R$536.400</div>
+            <div class="res-sub">MRR × 12</div>
+          </div>
+
+          <div class="roi-result-card">
+            <div class="res-label">ROI em 12 meses</div>
+            <div class="res-val" id="res-roi">168%</div>
+            <div class="res-sub">(Lucro anual − Investimento) ÷ Investimento</div>
+          </div>
+
+          <div id="res-churn-note" style="font-size:13px;color:#aaa;padding:8px 4px;line-height:1.5;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /slides-wrapper -->
+
+<script>
+  const TOTAL = 21;
+  let current = 0;
+  let isAnimating = false;
+
+  // Build dots
+  const dotsEl = document.getElementById('nav-dots');
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  }
+
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const totEl = document.getElementById('tot-slides');
+  const curEl = document.getElementById('cur-slide');
+  totEl.textContent = TOTAL;
+
+  function activate(idx) {
+    slides[idx].classList.add('active');
+    slides[idx].classList.remove('exit-left', 'exit-right');
+    // re-trigger stagger by cloning trick — just remove/re-add active
+    // (animations use animation-fill-mode: both so they replay on re-add)
+  }
+
+  function goTo(idx) {
+    if (isAnimating || idx === current || idx < 0 || idx >= TOTAL) return;
+    isAnimating = true;
+
+    const prev = current;
+    const dir = idx > prev ? 'left' : 'right';
+
+    // exit current
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add(dir === 'left' ? 'exit-left' : 'exit-right');
+
+    // prep next
+    slides[idx].style.transform = dir === 'left' ? 'translateX(60px)' : 'translateX(-60px)';
+    slides[idx].style.opacity = '0';
+    slides[idx].classList.remove('exit-left', 'exit-right', 'active');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        slides[idx].style.transform = '';
+        slides[idx].style.opacity = '';
+        activate(idx);
+      });
+    });
+
+    current = idx;
+
+    // update counter, dots & progress bar
+    curEl.textContent = idx + 1;
+    document.querySelectorAll('.nav-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === idx);
+    });
+    document.getElementById('progress-bar').style.width = ((idx + 1) / TOTAL * 100) + '%';
+
+    // update logo on dark slides
+    const logoImg = document.getElementById('logo-img');
+    if (slides[idx].classList.contains('dark-slide')) {
+      logoImg.src = 'assets/Frame 3 (1).png';
+    } else {
+      logoImg.src = 'assets/Group 7.png';
+    }
+
+    setTimeout(() => { isAnimating = false; }, 600);
+  }
+
+  function changeSlide(dir) { goTo(current + dir); }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); changeSlide(-1); }
+  });
+
+  // Mouse wheel
+  let wheelTimer = null;
+  document.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (wheelTimer) return;
+    wheelTimer = setTimeout(() => { wheelTimer = null; }, 700);
+    changeSlide(e.deltaY > 0 ? 1 : -1);
+  }, { passive: false });
+
+  // Touch swipe
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  // Init first slide
+  activate(0);
+  document.getElementById('progress-bar').style.width = (1 / TOTAL * 100) + '%';
+
+  // ── ROI CALCULATOR ──
+  function fmt(n) {
+    return 'R$' + Math.round(n).toLocaleString('pt-BR');
+  }
+  function calcROI() {
+    const invest  = parseFloat(document.getElementById('roi-invest').value)  || 0;
+    const ticket  = parseFloat(document.getElementById('roi-ticket-range').value) || 0;
+    const clients = parseFloat(document.getElementById('roi-clients-range').value) || 0;
+    const cost    = parseFloat(document.getElementById('roi-cost').value)    || 0;
+    const churn   = parseFloat(document.getElementById('roi-churn').value)   || 0;
+
+    const mrr     = ticket * clients;
+    const lucro   = mrr - cost;
+    const arr     = mrr * 12;
+    const lucroAnual = lucro * 12;
+    const payback = lucro > 0 ? (invest / lucro) : Infinity;
+    const roi     = invest > 0 ? ((lucroAnual - invest) / invest * 100) : 0;
+
+    // effective clients after churn (avg over year, simplified)
+    const churnFactor = churn / 100;
+    const avgClients  = churnFactor > 0
+      ? Math.round(clients * (1 - Math.pow(1 - churnFactor, 12)) / (12 * churnFactor))
+      : clients;
+
+    document.getElementById('res-mrr').textContent    = fmt(mrr);
+    document.getElementById('res-mrr-sub').textContent = `${Math.round(clients)} clientes × R$${Math.round(ticket)}/mês`;
+    document.getElementById('res-lucro').textContent  = lucro >= 0 ? fmt(lucro) : '−' + fmt(-lucro);
+    document.getElementById('res-arr').textContent    = fmt(arr);
+    document.getElementById('res-roi').textContent    = roi.toFixed(0) + '%';
+
+    if (payback === Infinity || payback > 120) {
+      document.getElementById('res-payback').textContent = '∞';
+    } else {
+      document.getElementById('res-payback').textContent = payback.toFixed(1) + ' meses';
+    }
+
+    const churnNote = churn > 0
+      ? `Com churn de ${churn}%, em 12 meses a base média cai para ~${avgClients} clientes. Para manter ${Math.round(clients)}, você precisa adquirir ~${Math.round(clients * churnFactor)} novos clientes/mês.`
+      : '';
+    document.getElementById('res-churn-note').textContent = churnNote;
+  }
+
+  // Sync sliders → display values
+  document.getElementById('roi-ticket-range').addEventListener('input', function() {
+    document.getElementById('roi-ticket-val').textContent = this.value;
+    calcROI();
+  });
+  document.getElementById('roi-clients-range').addEventListener('input', function() {
+    document.getElementById('roi-clients-val').textContent = this.value;
+    calcROI();
+  });
+  ['roi-invest','roi-cost','roi-churn'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calcROI);
+  });
+  calcROI();
+</script>
+</body>
+</html>
